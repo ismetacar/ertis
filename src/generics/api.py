@@ -7,9 +7,9 @@ from src.utils import query_helpers
 from src.utils.errors import ErtisError
 
 
-def rename(newname):
+def rename(new_name):
     def decorator(f):
-        f.__name__ = newname
+        f.__name__ = new_name
         return f
     return decorator
 
@@ -91,8 +91,10 @@ class GenericErtisApi(object):
                     ensure_token_provided(request, self.resource_name)
                 where, select, limit, sort, skip = query_helpers.parse(request)
                 return Response(
-                    self.resource_service.filter(app.generic_service, where, select, limit, skip, sort,
-                                                 self.resource_name),
+                    self.resource_service.filter(
+                        app.generic_service, where, select,
+                        limit, skip, sort, self.resource_name
+                    ),
                     mimetype='application/json',
                     status=self.STATUS_CODE_MAPPING['QUERY']
                 )

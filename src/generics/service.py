@@ -100,5 +100,4 @@ class ErtisGenericService(ErtisGenericRepository):
             'count': resources[1]
         }
 
-
         return json.dumps(response, default=bson_to_json)

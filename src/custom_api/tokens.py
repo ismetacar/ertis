@@ -9,7 +9,7 @@ from src.utils.errors import ErtisError
 
 
 def init_api(app, settings):
-    @app.route('/api/tokens', methods=['POST'])
+    @app.route('/api/v1/tokens', methods=['POST'])
     def create_token():
         body = json.loads(request.data)
         try:
@@ -37,5 +37,26 @@ def init_api(app, settings):
         }
 
         return Response(json.dumps(response), mimetype='application/json', status=200)
+
+    @app.route('/api/v1/tokens/refresh', methods=['POST'])
+    def refresh_token():
+        try:
+            body = json.loads(request.data)
+        except ValueError as e:
+            raise ErtisError(
+                err_code="errors.badRequest",
+                err_msg="Invalid json provided",
+                status_code=400
+            )
+
+        token = body['token']
+
+        new_token = ErtisTokenService.refresh_token(app.generic_service, token)
+
+        response = {
+            'token': new_token
+        }
+
+        return Response(json.dumps(response), mimetype='application/json', status=201)
 
 
