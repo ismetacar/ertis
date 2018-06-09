@@ -65,7 +65,7 @@ def register_api(app):
 
     api.GenericErtisApi(
         app,
-        endpoint_prefix='/api/v1/material-types',
+        endpoint_prefix='/api/v1/projects',
         methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
         resource_name='projects',
         resource_service=ErtisGenericService,
