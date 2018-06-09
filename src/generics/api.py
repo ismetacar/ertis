@@ -1,3 +1,5 @@
+import logging
+
 from flask import request, Response
 
 from src.custom_models.tokens.tokens import validate_token
@@ -66,6 +68,7 @@ class GenericErtisApi(object):
         self.update_validation_schema = update_validation_schema
         self.pipeline_functions = pipeline_functions
         self.allow_to_anonymous = allow_to_anonymous
+        self.logger = logging.getLogger('resource.' + self.resource_name + '.logger')
 
     def generate_urls(self):
         delete_url = get_url = update_url = self.endpoint_prefix + '/<resource_id>'
@@ -76,6 +79,8 @@ class GenericErtisApi(object):
 
     def generate_endpoints(self):
         app = self.current_app
+        self.logger.info("Resource initialized on <{}> URL".format(self.generate_urls()))
+
         get_url, post_url, update_url, delete_url, query_url = self.generate_urls()
 
         if 'QUERY' in self.methods:

@@ -8,7 +8,7 @@ def register_api(app):
 
     api.GenericErtisApi(
         app,
-        endpoint_prefix='/api/users',
+        endpoint_prefix='/api/v1/users',
         methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
         resource_name='users',
         resource_service=ErtisGenericService,
@@ -20,9 +20,63 @@ def register_api(app):
 
     api.GenericErtisApi(
         app,
-        endpoint_prefix='/api/departments',
+        endpoint_prefix='/api/v1/positions',
+        methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
+        resource_name='positions',
+        resource_service=ErtisGenericService,
+        allow_to_anonymous=False
+    ).generate_endpoints()
+
+    api.GenericErtisApi(
+        app,
+        endpoint_prefix='/api/v1/user-groups',
+        methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
+        resource_name='user_groups',
+        resource_service=ErtisGenericService,
+        allow_to_anonymous=False
+    ).generate_endpoints()
+
+    api.GenericErtisApi(
+        app,
+        endpoint_prefix='/api/v1/departments',
         methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
         resource_name='departments',
+        resource_service=ErtisGenericService,
+        allow_to_anonymous=False
+    ).generate_endpoints()
+
+    api.GenericErtisApi(
+        app,
+        endpoint_prefix='/api/v1/materials',
+        methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
+        resource_name='materials',
+        resource_service=ErtisGenericService,
+        allow_to_anonymous=False
+    ).generate_endpoints()
+
+    api.GenericErtisApi(
+        app,
+        endpoint_prefix='/api/v1/material-types',
+        methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
+        resource_name='material_types',
+        resource_service=ErtisGenericService,
+        allow_to_anonymous=False
+    ).generate_endpoints()
+
+    api.GenericErtisApi(
+        app,
+        endpoint_prefix='/api/v1/material-types',
+        methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
+        resource_name='projects',
+        resource_service=ErtisGenericService,
+        allow_to_anonymous=False
+    ).generate_endpoints()
+
+    api.GenericErtisApi(
+        app,
+        endpoint_prefix='/api/v1/worksites',
+        methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
+        resource_name='worksites',
         resource_service=ErtisGenericService,
         allow_to_anonymous=False
     ).generate_endpoints()
