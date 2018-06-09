@@ -92,4 +92,13 @@ class ErtisGenericService(ErtisGenericRepository):
     def filter(self, where, select, limit, skip, sort, resource_name):
         resources = self.query(where, select, limit, skip, sort, collection=resource_name)
 
-        return json.dumps(resources, default=bson_to_json)
+        for resource in resources[0]:
+            delete_critical_fields(resource)
+
+        response = {
+            'items': resources[0],
+            'count': resources[1]
+        }
+
+
+        return json.dumps(response, default=bson_to_json)

@@ -203,7 +203,7 @@ class ErtisGenericRepository(object):
             if sort:
                 cur.sort(sort)
 
-            items = cur.to_list(length=None)
+            items = list(cur)
 
             return items, total_count["executionStats"]["nReturned"]
 

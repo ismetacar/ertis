@@ -36,4 +36,4 @@ def handle_exceptions(error):
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
