@@ -1,3 +1,5 @@
 ertis_api
 venv
 .idea
+__pycache__
+.pyc
