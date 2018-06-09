@@ -18,7 +18,7 @@ def object_hook(json_dict):
     else:
         try:
             return parse_date(json_dict)
-        except:
+        except Exception:
             pass
 
     return json_dict

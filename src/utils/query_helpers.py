@@ -1,7 +1,7 @@
 import json
 import logging
 
-from src.generics.errors import ErtisError
+from src.utils.errors import ErtisError
 from src.utils.json_helpers import object_hook
 
 

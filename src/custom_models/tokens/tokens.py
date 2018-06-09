@@ -3,8 +3,9 @@ import json
 
 import jwt
 from bson import ObjectId
+from jwt import ExpiredSignatureError
 
-from src.generics.errors import ErtisError
+from src.utils.errors import ErtisError
 from src.generics.service import ErtisGenericService
 from src.utils import temporal_helpers
 from src.utils.json_helpers import bson_to_json
@@ -16,6 +17,30 @@ def _get_exp():
     return temporal_helpers.to_timestamp(
         (temporal_helpers.utc_now() + exp_range)
     )
+
+
+def validate_token(token):
+
+    try:
+        decoded = jwt.decode(token, key='123456789', algorithms='HS256')
+
+    except ExpiredSignatureError as e:
+        raise ErtisError(
+            status_code=401,
+            err_msg="Provided token has expired",
+            err_code="errors.tokenExpiredError",
+        )
+    except Exception as e:
+        raise ErtisError(
+            status_code=401,
+            err_msg="Provided token is invalid",
+            err_code="errors.tokenIsInvalid",
+            context={
+                'e': str(e)
+            }
+        )
+
+    return decoded
 
 
 class ErtisTokenService(ErtisGenericService):
@@ -46,4 +71,3 @@ class ErtisTokenService(ErtisGenericService):
 
         token = jwt.encode(payload=payload, key='123456789', algorithm='HS256').decode('utf-8')
         return token
-

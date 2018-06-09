@@ -4,7 +4,7 @@ import traceback
 from flask import Response
 
 from src import create_app
-from src.generics.errors import ErtisError
+from src.utils.errors import ErtisError
 from src.utils.json_helpers import bson_to_json
 
 app = create_app()

@@ -40,4 +40,4 @@ def parse(_start_date):
     if type(_start_date) == datetime.datetime:
         return _start_date
     else:
-        return parser.parse(_start_date, )
+        return parser.parse(_start_date)

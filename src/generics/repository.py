@@ -1,7 +1,7 @@
 from bson import ObjectId
 from pymongo.errors import OperationFailure, DuplicateKeyError
 
-from src.generics.errors import ErtisError
+from src.utils.errors import ErtisError
 
 
 class RecordNotExistsError(ErtisError):

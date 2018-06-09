@@ -3,7 +3,8 @@ import json
 
 from jsonschema import validate, ValidationError
 
-from src.generics.errors import ErtisError
+from src.custom_models.users.users import delete_critical_fields
+from src.utils.errors import ErtisError
 from src.generics.repository import ErtisGenericRepository
 from src.utils.json_helpers import object_hook, bson_to_json
 
@@ -19,6 +20,7 @@ class ErtisGenericService(ErtisGenericRepository):
 
     def get(self, _id, resource_name):
         resource = self.find_one_by_id(_id, resource_name)
+        delete_critical_fields(resource)
         return json.dumps(resource, default=bson_to_json)
 
     def post(self, data, resource_name, validate_by=None, pipeline=None):
@@ -86,3 +88,8 @@ class ErtisGenericService(ErtisGenericRepository):
         run_function_pool(resource, pipeline, when='before_delete')
         self.remove_one_by_id(_id, collection=resource_name)
         run_function_pool(resource, pipeline, when='after_delete')
+
+    def filter(self, where, select, limit, skip, sort, resource_name):
+        resources = self.query(where, select, limit, skip, sort, collection=resource_name)
+
+        return json.dumps(resources, default=bson_to_json)

@@ -1,6 +1,40 @@
 from flask import request, Response
 
+from src.custom_models.tokens.tokens import validate_token
 from src.utils import query_helpers
+from src.utils.errors import ErtisError
+
+
+def ensure_token_provided(request, api_name):
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        raise ErtisError(
+            err_code="errors.authorizationHeaderRequired",
+            err_msg="Authorization header is required for using this api<{}>",
+            status_code=401
+        )
+    try:
+        auth_header = auth_header.split(' ')
+    except Exception as e:
+        ErtisError(
+            err_msg="Invalid authorization header provided.",
+            err_code="errors.authorizationHeaderIsInvalid",
+            status_code=401,
+            context={
+                'message': str(e)
+            }
+        )
+
+    if len(auth_header) != 2:
+        raise ErtisError(
+            err_msg="Bearer token usage is invalid",
+            err_code="errors.invalidBearerTokenUsage",
+            status_code=401
+        )
+
+    token = auth_header[1]
+
+    validate_token(token)
 
 
 class GenericErtisApi(object):
@@ -14,7 +48,7 @@ class GenericErtisApi(object):
     }
 
     def __init__(self, app, endpoint_prefix, methods, resource_name, resource_service, create_validation_schema,
-                 update_validation_schema, pipeline_functions=None):
+                 update_validation_schema, pipeline_functions=None, allow_to_anonymous=False):
         self.app = app
         self.current_app = app
         self.endpoint_prefix = endpoint_prefix
@@ -24,6 +58,7 @@ class GenericErtisApi(object):
         self.create_validation_schema = create_validation_schema
         self.update_validation_schema = update_validation_schema
         self.pipeline_functions = pipeline_functions
+        self.allow_to_anonymous = allow_to_anonymous
 
     def generate_urls(self):
         delete_url = get_url = update_url = self.endpoint_prefix + '/<resource_id>'
@@ -39,6 +74,8 @@ class GenericErtisApi(object):
         if 'QUERY' in self.methods:
             @app.route(query_url, methods=['POST'])
             def query():
+                if not self.allow_to_anonymous:
+                    ensure_token_provided(request, self.resource_name)
                 where, select, limit, sort, skip = query_helpers.parse(request)
                 return Response(
                     self.resource_service.filter(app.generic_service, where, select, limit, skip, sort,
@@ -50,6 +87,8 @@ class GenericErtisApi(object):
         if 'GET' in self.methods:
             @app.route(get_url, methods=['GET'])
             def read(resource_id):
+                if not self.allow_to_anonymous:
+                    ensure_token_provided(request, self.resource_name)
                 return Response(
                     self.resource_service.get(app.generic_service, _id=resource_id, resource_name=self.resource_name),
                     mimetype='application/json',
@@ -59,6 +98,8 @@ class GenericErtisApi(object):
         if 'POST' in self.methods:
             @app.route(post_url, methods=['POST'])
             def create():
+                if not self.allow_to_anonymous:
+                    ensure_token_provided(request, self.resource_name)
                 data = request.data
                 return Response(
                     self.resource_service.post(
@@ -75,6 +116,8 @@ class GenericErtisApi(object):
         if 'PUT' in self.methods:
             @app.route(update_url, methods=['PUT'])
             def update(resource_id):
+                if not self.allow_to_anonymous:
+                    ensure_token_provided(request, self.resource_name)
                 data = request.data
                 return Response(
                     self.resource_service.put(
@@ -92,6 +135,8 @@ class GenericErtisApi(object):
         if 'DELETE' in self.methods:
             @app.route(delete_url, methods=['DELETE'])
             def delete(resource_id):
+                if not self.allow_to_anonymous:
+                    ensure_token_provided(request, self.resource_name)
                 return Response(
                     self.resource_service.delete(
                         app.generic_service,
