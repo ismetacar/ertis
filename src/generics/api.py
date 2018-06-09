@@ -5,12 +5,19 @@ from src.utils import query_helpers
 from src.utils.errors import ErtisError
 
 
-def ensure_token_provided(request, api_name):
-    auth_header = request.headers.get('Authorization')
+def rename(newname):
+    def decorator(f):
+        f.__name__ = newname
+        return f
+    return decorator
+
+
+def ensure_token_provided(req, api_name):
+    auth_header = req.headers.get('Authorization')
     if not auth_header:
         raise ErtisError(
             err_code="errors.authorizationHeaderRequired",
-            err_msg="Authorization header is required for using this api<{}>",
+            err_msg="Authorization header is required for using this api<{}>".format(api_name),
             status_code=401
         )
     try:
@@ -47,8 +54,8 @@ class GenericErtisApi(object):
         'DISTINCT': 200
     }
 
-    def __init__(self, app, endpoint_prefix, methods, resource_name, resource_service, create_validation_schema,
-                 update_validation_schema, pipeline_functions=None, allow_to_anonymous=False):
+    def __init__(self, app, endpoint_prefix, methods, resource_name, resource_service, create_validation_schema=None,
+                 update_validation_schema=None, pipeline_functions=None, allow_to_anonymous=False):
         self.app = app
         self.current_app = app
         self.endpoint_prefix = endpoint_prefix
@@ -73,6 +80,7 @@ class GenericErtisApi(object):
 
         if 'QUERY' in self.methods:
             @app.route(query_url, methods=['POST'])
+            @rename(self.resource_name + '_query')
             def query():
                 if not self.allow_to_anonymous:
                     ensure_token_provided(request, self.resource_name)
@@ -86,17 +94,23 @@ class GenericErtisApi(object):
 
         if 'GET' in self.methods:
             @app.route(get_url, methods=['GET'])
+            @rename(self.resource_name + '_read')
             def read(resource_id):
                 if not self.allow_to_anonymous:
                     ensure_token_provided(request, self.resource_name)
                 return Response(
-                    self.resource_service.get(app.generic_service, _id=resource_id, resource_name=self.resource_name),
+                    self.resource_service.get(
+                        app.generic_service,
+                        _id=resource_id,
+                        resource_name=self.resource_name
+                    ),
                     mimetype='application/json',
                     status=self.STATUS_CODE_MAPPING['READ']
                 )
 
         if 'POST' in self.methods:
             @app.route(post_url, methods=['POST'])
+            @rename(self.resource_name + '_create')
             def create():
                 if not self.allow_to_anonymous:
                     ensure_token_provided(request, self.resource_name)
@@ -115,6 +129,7 @@ class GenericErtisApi(object):
 
         if 'PUT' in self.methods:
             @app.route(update_url, methods=['PUT'])
+            @rename(self.resource_name + '_update')
             def update(resource_id):
                 if not self.allow_to_anonymous:
                     ensure_token_provided(request, self.resource_name)
@@ -134,6 +149,7 @@ class GenericErtisApi(object):
 
         if 'DELETE' in self.methods:
             @app.route(delete_url, methods=['DELETE'])
+            @rename(self.resource_name + '_delete')
             def delete(resource_id):
                 if not self.allow_to_anonymous:
                     ensure_token_provided(request, self.resource_name)

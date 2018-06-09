@@ -17,3 +17,12 @@ def register_api(app):
         pipeline_functions=pipeline_functions,
         allow_to_anonymous=False
     ).generate_endpoints()
+
+    api.GenericErtisApi(
+        app,
+        endpoint_prefix='/api/departments',
+        methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
+        resource_name='departments',
+        resource_service=ErtisGenericService,
+        allow_to_anonymous=False
+    ).generate_endpoints()
