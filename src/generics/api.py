@@ -48,6 +48,7 @@ def ensure_token_provided(req, api_name, secret):
 
 
 class GenericErtisApi(object):
+
     STATUS_CODE_MAPPING = {
         'CREATE': 201,
         'READ': 200,
@@ -60,6 +61,36 @@ class GenericErtisApi(object):
     def __init__(self, app, settings, endpoint_prefix, methods, resource_name, resource_service,
                  create_validation_schema=None, update_validation_schema=None, pipeline_functions=None,
                  allow_to_anonymous=False):
+        """
+
+        if a generated instance is subjected to generate_endpoints() function, APIs are created for basic HTTP methods
+
+        Usage:
+
+            GenericErtisApi(
+                app,
+                settings,
+                endpoint_prefix='/api/example-endpoint',
+                methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
+                resource_name='example',
+                resource_service=example-service,
+                create_validation_schema=jsonschema_for_create,
+                update_validation_schema=jsonschema_for_update,
+                pipeline_functions=example_functions,
+                allow_to_anonymous=False/True
+            ).generate_endpoints()
+
+        :param app: The currently running application.
+        :param settings: Predefined application settings in config file
+        :param endpoint_prefix: Endpoint of the related API
+        :param methods: HTTP methods for current API
+        :param resource_name: API name and name of the collection in the database
+        :param resource_service: Service to be used for related API
+        :param create_validation_schema: Validation schemes for POST method
+        :param update_validation_schema: Validation schemes for PUT method
+        :param pipeline_functions: Function pool to work before and after the related operation
+        :param allow_to_anonymous: Is token required for related API
+        """
         self.app = app
         self.settings = settings
         self.current_app = app
