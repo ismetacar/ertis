@@ -1,4 +1,5 @@
 import copy
+import datetime
 import json
 
 from jsonschema import validate, ValidationError
@@ -23,7 +24,7 @@ class ErtisGenericService(ErtisGenericRepository):
         delete_critical_fields(self, resource)
         return json.dumps(resource, default=bson_to_json)
 
-    def post(self, data, resource_name, validate_by=None, pipeline=None):
+    def post(self, user, data, resource_name, validate_by=None, pipeline=None):
         data = object_hook(json.loads(data))
         if validate_by:
             try:
@@ -40,12 +41,16 @@ class ErtisGenericService(ErtisGenericRepository):
                 )
 
         run_function_pool(self, data, pipeline, when='before_create')
+        data['_sys'] = {
+            'created_by': user['email'],
+            'created_at': datetime.datetime.utcnow()
+        }
         resource = self.save(data, resource_name)
         run_function_pool(self, data, pipeline, when='after_create')
 
         return json.dumps(resource, default=bson_to_json)
 
-    def put(self, _id, data, resource_name, validate_by=None, pipeline=None):
+    def put(self, user, _id, data, resource_name, validate_by=None, pipeline=None):
         data = object_hook(json.loads(data))
         if validate_by:
             try:
@@ -74,6 +79,12 @@ class ErtisGenericService(ErtisGenericRepository):
             )
 
         run_function_pool(self, resource, pipeline, when='before_update')
+
+        resource['_sys'].update({
+            'modified_by': user['email'],
+            'modified_at': datetime.datetime.utcnow()
+        })
+
         self.replace(
             resource,
             collection=resource_name

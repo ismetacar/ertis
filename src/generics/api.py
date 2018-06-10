@@ -44,7 +44,7 @@ def ensure_token_provided(db, req, api_name, secret, verify):
 
     token = auth_header[1]
     security_manager = ErtisSecurityManager(db)
-    security_manager.load_user(token, secret, verify)
+    return security_manager.load_user(token, secret, verify)
 
 
 class GenericErtisApi(object):
@@ -162,7 +162,7 @@ class GenericErtisApi(object):
             @rename(self.resource_name + '_create')
             def create():
                 if not self.allow_to_anonymous:
-                    ensure_token_provided(
+                    user = ensure_token_provided(
                         app.db,
                         request, self.resource_name,
                         self.settings['application_secret'], self.settings['verify_token']
@@ -171,6 +171,7 @@ class GenericErtisApi(object):
                 return Response(
                     self.resource_service.post(
                         app.generic_service,
+                        user,
                         data,
                         resource_name=self.resource_name,
                         validate_by=self.create_validation_schema,
@@ -185,7 +186,7 @@ class GenericErtisApi(object):
             @rename(self.resource_name + '_update')
             def update(resource_id):
                 if not self.allow_to_anonymous:
-                    ensure_token_provided(
+                    user = ensure_token_provided(
                         app.db,
                         request, self.resource_name,
                         self.settings['application_secret'], self.settings['verify_token']
@@ -194,6 +195,7 @@ class GenericErtisApi(object):
                 return Response(
                     self.resource_service.put(
                         app.generic_service,
+                        user,
                         resource_id,
                         data,
                         resource_name=self.resource_name,

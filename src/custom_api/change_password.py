@@ -1,3 +1,4 @@
+import datetime
 import json
 
 from flask import request, Response
@@ -82,6 +83,8 @@ def init_api(app, settings):
         user['password'] = hashed_password
 
         user.pop('permissions', None)
+        user['sys']['modified_by'] = user['email']
+        user['sys']['modified_at'] = datetime.datetime.utcnow()
 
         g_service = app.generic_service
         g_service.replace(user, 'users')
