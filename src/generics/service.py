@@ -89,15 +89,15 @@ class ErtisGenericService(ErtisGenericRepository):
         self.remove_one_by_id(_id, collection=resource_name)
         run_function_pool(self, resource, pipeline, when='after_delete')
 
-    def filter(self, where, select, limit, skip, sort, resource_name):
-        resources = self.query(where, select, limit, skip, sort, collection=resource_name)
+    def filter(self, where, select, limit, sort, skip, resource_name):
+        resources, count = self.query(where, select, limit, sort, skip, collection=resource_name)
 
-        for resource in resources[0]:
+        for resource in resources:
             delete_critical_fields(resource, self)
 
         response = {
-            'items': resources[0],
-            'count': resources[1]
+            'items': resources,
+            'count': resources
         }
 
         return json.dumps(response, default=bson_to_json)
