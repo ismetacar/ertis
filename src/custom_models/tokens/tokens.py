@@ -19,9 +19,9 @@ def _get_exp(token_ttl):
     )
 
 
-def validate_token(token, secret):
+def validate_token(token, secret, verify):
     try:
-        decoded = jwt.decode(token, key=secret, algorithms='HS256')
+        decoded = jwt.decode(token, key=secret, algorithms='HS256', verify=verify)
 
     except ExpiredSignatureError as e:
         raise ErtisError(
@@ -80,9 +80,10 @@ class ErtisTokenService(ErtisGenericService):
 
         return token
 
-    def refresh_token(self, token, secret, token_ttl):
+    def refresh_token(self, token, secret, token_ttl, verify):
         try:
-            decoded = jwt.decode(token, key=secret, algorithms='HS256')
+            decoded = validate_token(token, secret, verify)
+
             self.find_one_by_id(
                 decoded['prn'],
                 collection='users'

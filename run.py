@@ -6,13 +6,13 @@ from flask import Response
 
 from src import create_app
 from src.utils.errors import ErtisError
-from src.utils.json_helpers import bson_to_json
+from src.utils.json_helpers import bson_to_json, parse_boolean
 
 
 def config_settings():
     config_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "confs/local.py"))
     with open(config_file_path, 'r') as f:
-        settings = json.loads(f.read().split('=')[1])
+        settings = json.loads(f.read().split('=')[1], object_hook=parse_boolean)
     f.close()
     return settings
 

@@ -3,6 +3,7 @@ var = {
     "api_version": "v1",
     "application_secret": "AtqVaL11EHVPEpbu2mr0yZgKXj1BnRj0",
     "token_ttl": 15,
-    "default_database": "ertis"
+    "default_database": "ertis",
+    "verify_token": "true"
 }
 

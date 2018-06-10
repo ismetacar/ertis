@@ -63,7 +63,9 @@ def init_api(app, settings):
             app.generic_service,
             token,
             settings['application_secret'],
-            settings['token_ttl'])
+            settings['token_ttl'],
+            settings['verify_token']
+        )
 
         response = {
             'token': new_token

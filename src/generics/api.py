@@ -15,7 +15,7 @@ def rename(new_name):
     return decorator
 
 
-def ensure_token_provided(req, api_name, secret):
+def ensure_token_provided(req, api_name, secret, verify):
     auth_header = req.headers.get('Authorization')
     if not auth_header:
         raise ErtisError(
@@ -44,7 +44,7 @@ def ensure_token_provided(req, api_name, secret):
 
     token = auth_header[1]
 
-    validate_token(token, secret)
+    validate_token(token, secret, verify)
 
 
 class GenericErtisApi(object):
@@ -122,7 +122,10 @@ class GenericErtisApi(object):
             @rename(self.resource_name + '_query')
             def query():
                 if not self.allow_to_anonymous:
-                    ensure_token_provided(request, self.resource_name, self.settings['application_secret'])
+                    ensure_token_provided(
+                        request, self.resource_name,
+                        self.settings['application_secret'], self.settings['verify_token']
+                    )
                 where, select, limit, sort, skip = query_helpers.parse(request)
                 return Response(
                     self.resource_service.filter(
@@ -138,7 +141,10 @@ class GenericErtisApi(object):
             @rename(self.resource_name + '_read')
             def read(resource_id):
                 if not self.allow_to_anonymous:
-                    ensure_token_provided(request, self.resource_name, self.settings['application_secret'])
+                    ensure_token_provided(
+                        request, self.resource_name,
+                        self.settings['application_secret'], self.settings['verify_token']
+                    )
                 return Response(
                     self.resource_service.get(
                         app.generic_service,
@@ -154,7 +160,10 @@ class GenericErtisApi(object):
             @rename(self.resource_name + '_create')
             def create():
                 if not self.allow_to_anonymous:
-                    ensure_token_provided(request, self.resource_name, self.settings['application_secret'])
+                    ensure_token_provided(
+                        request, self.resource_name,
+                        self.settings['application_secret'], self.settings['verify_token']
+                    )
                 data = request.data
                 return Response(
                     self.resource_service.post(
@@ -173,7 +182,10 @@ class GenericErtisApi(object):
             @rename(self.resource_name + '_update')
             def update(resource_id):
                 if not self.allow_to_anonymous:
-                    ensure_token_provided(request, self.resource_name, self.settings['application_secret'])
+                    ensure_token_provided(
+                        request, self.resource_name,
+                        self.settings['application_secret'], self.settings['verify_token']
+                    )
                 data = request.data
                 return Response(
                     self.resource_service.put(
@@ -193,7 +205,10 @@ class GenericErtisApi(object):
             @rename(self.resource_name + '_delete')
             def delete(resource_id):
                 if not self.allow_to_anonymous:
-                    ensure_token_provided(request, self.resource_name, self.settings['application_secret'])
+                    ensure_token_provided(
+                        request, self.resource_name,
+                        self.settings['application_secret'], self.settings['verify_token']
+                    )
                 return Response(
                     self.resource_service.delete(
                         app.generic_service,

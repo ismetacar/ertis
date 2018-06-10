@@ -44,7 +44,7 @@ def init_api(app, settings):
 
         token = auth_header[1]
 
-        validate_token(token, settings['application_secret'])
+        validate_token(token, settings['application_secret'], settings['verify_token'])
 
         links = []
         for rule in app.url_map.iter_rules():

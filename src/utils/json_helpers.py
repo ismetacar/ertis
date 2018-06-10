@@ -57,3 +57,15 @@ def bson_to_json(o):
     elif isinstance(o, decimal.Decimal):
         return str(o)
     return default(o)
+
+
+def parse_boolean(json_dict):
+    for key, value in json_dict.items():
+        if value in [True, 'True', '1', 1, 'true']:
+            json_dict[key] = True
+
+        if value in [False, 'False', 0, 'false']:
+            json_dict[key] = False
+
+    return json_dict
+
