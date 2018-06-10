@@ -43,7 +43,8 @@ class ErtisGenericService(ErtisGenericRepository):
         run_function_pool(self, data, pipeline, when='before_create')
         data['_sys'] = {
             'created_by': user['email'],
-            'created_at': datetime.datetime.utcnow()
+            'created_at': datetime.datetime.utcnow(),
+            'collection': resource_name
         }
         resource = self.save(data, resource_name)
         run_function_pool(self, data, pipeline, when='after_create')
