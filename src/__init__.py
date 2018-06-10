@@ -5,8 +5,7 @@ from pymongo import MongoClient
 def create_app(settings):
     app = Flask(__name__)
 
-    client = MongoClient(settings['mongo_connection_string'])
-    app.db = client.get_default_database()
+    app.db = MongoClient(settings['mongo_connection_string']).get_database(settings['default_database'])
 
     from src.services import init_services
     init_services(app, settings)

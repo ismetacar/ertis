@@ -1,9 +1,8 @@
 import json
-import optparse
+import os
 import traceback
 
-import os
-from flask import Response, Config
+from flask import Response
 
 from src import create_app
 from src.utils.errors import ErtisError
@@ -13,9 +12,9 @@ from src.utils.json_helpers import bson_to_json
 def config_settings():
     config_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "confs/local.py"))
     with open(config_file_path, 'r') as f:
-        confs = json.load(f)
+        settings = json.loads(f.read().split('=')[1])
     f.close()
-    return confs
+    return settings
 
 
 app = create_app(config_settings())
