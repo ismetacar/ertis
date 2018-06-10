@@ -28,6 +28,9 @@ def validate_token(token, secret):
             status_code=401,
             err_msg="Provided token has expired",
             err_code="errors.tokenExpiredError",
+            context={
+                'message': str(e)
+            }
         )
     except Exception as e:
         raise ErtisError(
@@ -90,6 +93,9 @@ class ErtisTokenService(ErtisGenericService):
                 status_code=401,
                 err_msg="Provided token has expired",
                 err_code="errors.tokenExpiredError",
+                context={
+                    'message': str(e)
+                }
             )
         except Exception as e:
             raise ErtisError(
