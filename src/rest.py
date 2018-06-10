@@ -80,3 +80,12 @@ def register_api(app):
         resource_service=ErtisGenericService,
         allow_to_anonymous=False
     ).generate_endpoints()
+
+    api.GenericErtisApi(
+        app,
+        endpoint_prefix='/api/v1/permission-groups',
+        methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
+        resource_name='permission_groups',
+        resource_service=ErtisGenericService,
+        allow_to_anonymous=False
+    ).generate_endpoints()

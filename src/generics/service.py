@@ -9,18 +9,18 @@ from src.generics.repository import ErtisGenericRepository
 from src.utils.json_helpers import object_hook, bson_to_json
 
 
-def run_function_pool(data, pipeline, when=None):
+def run_function_pool(generic_service, data, pipeline, when=None):
     p_functions = pipeline() if pipeline else {}
     before_create_funcs = p_functions.get(when, [])
     for f in before_create_funcs:
-        data = f(data)
+        data = f(data, generic_service)
 
 
 class ErtisGenericService(ErtisGenericRepository):
 
     def get(self, _id, resource_name):
         resource = self.find_one_by_id(_id, resource_name)
-        delete_critical_fields(resource)
+        delete_critical_fields(self, resource)
         return json.dumps(resource, default=bson_to_json)
 
     def post(self, data, resource_name, validate_by=None, pipeline=None):
@@ -39,9 +39,9 @@ class ErtisGenericService(ErtisGenericRepository):
                     }
                 )
 
-        run_function_pool(data, pipeline, when='before_create')
+        run_function_pool(self, data, pipeline, when='before_create')
         resource = self.save(data, resource_name)
-        run_function_pool(data, pipeline, when='after_create')
+        run_function_pool(self, data, pipeline, when='after_create')
 
         return json.dumps(resource, default=bson_to_json)
 
@@ -73,27 +73,27 @@ class ErtisGenericService(ErtisGenericRepository):
                 status_code=409
             )
 
-        run_function_pool(resource, pipeline, when='before_update')
+        run_function_pool(self, resource, pipeline, when='before_update')
         self.replace(
             resource,
             collection=resource_name
         )
-        run_function_pool(resource, pipeline, when='after_update')
+        run_function_pool(self, resource, pipeline, when='after_update')
 
         return json.dumps(resource, default=bson_to_json)
 
     def delete(self, _id, resource_name, pipeline=None):
         resource = self.find_one_by_id(_id, collection=resource_name)
 
-        run_function_pool(resource, pipeline, when='before_delete')
+        run_function_pool(self, resource, pipeline, when='before_delete')
         self.remove_one_by_id(_id, collection=resource_name)
-        run_function_pool(resource, pipeline, when='after_delete')
+        run_function_pool(self, resource, pipeline, when='after_delete')
 
     def filter(self, where, select, limit, skip, sort, resource_name):
         resources = self.query(where, select, limit, skip, sort, collection=resource_name)
 
         for resource in resources[0]:
-            delete_critical_fields(resource)
+            delete_critical_fields(resource, self)
 
         response = {
             'items': resources[0],

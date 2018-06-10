@@ -3,16 +3,19 @@ CREATE_USER_SCHEMA = {
     'type': 'object',
     'properties': {
         'username': {
-            'type': 'string'
+            'type': 'string',
+            'minLength': 4
         },
         'fullname': {
-            'type': 'string'
+            'type': 'string',
+            'minLength': 4
         },
         'email': {
-            'type': 'string'
+            'type': 'string',
         },
         'password': {
-            'type': 'string'
+            'type': 'string',
+            'minLength': 4
         }
     },
     'required': [
