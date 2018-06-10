@@ -16,13 +16,17 @@ CREATE_USER_SCHEMA = {
         'password': {
             'type': 'string',
             'minLength': 4
+        },
+        'permission_group': {
+            'type': 'string'
         }
     },
     'required': [
         'username',
         'fullname',
         'email',
-        'password'
+        'password',
+        'permission_group'
     ]
 }
 

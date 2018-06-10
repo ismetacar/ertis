@@ -4,7 +4,11 @@ from src.utils.errors import ErtisError
 
 
 def ensure_email_is_unique(resource, generic_service):
-    email = resource.get('email')
+    email = resource.get('email', None)
+
+    if not email:
+        return resource
+
     users = generic_service.find_one_by(
         where={
             'email': email
@@ -36,7 +40,7 @@ def delete_critical_fields(resource, generic_service):
     return resource
 
 
-async def hash_updated_password(resource, generic_service):
+def hash_updated_password(resource, generic_service):
     if resource.get('password', None):
         hashed_password = hash.bcrypt.hash(resource['password'])
         resource['password'] = hashed_password
@@ -44,10 +48,44 @@ async def hash_updated_password(resource, generic_service):
     return resource
 
 
+def validate_permission_group_in_user(resource, generic_service):
+    provided_permission_group = resource.get('permission_group', None)
+    if not provided_permission_group:
+        return resource
+
+    permission_group = generic_service.find_one_by(
+        where={
+            'slug': provided_permission_group
+        },
+        collection='permission_groups',
+        raise_exec=False
+    )
+
+    if not permission_group:
+        raise ErtisError(
+            err_code="errors.permissionGroupNotFound",
+            err_msg="Permission group not found, bad request received",
+            status_code=400,
+            context={
+                'provided_permission_group': provided_permission_group
+            }
+        )
+
+    return resource
+
+
 def pipeline_functions():
-    before_create = [hash_pwd, ensure_email_is_unique]
+    before_create = [
+        hash_pwd,
+        ensure_email_is_unique,
+        validate_permission_group_in_user
+    ]
     after_create = [delete_critical_fields]
-    before_update = [hash_updated_password]
+    before_update = [
+        hash_updated_password,
+        ensure_email_is_unique,
+        validate_permission_group_in_user,
+    ]
     after_update = [delete_critical_fields]
     before_delete = []
     after_delete = []
