@@ -19,32 +19,6 @@ def _get_exp(token_ttl):
     )
 
 
-def validate_token(token, secret, verify):
-    try:
-        decoded = jwt.decode(token, key=secret, algorithms='HS256', verify=verify)
-
-    except ExpiredSignatureError as e:
-        raise ErtisError(
-            status_code=401,
-            err_msg="Provided token has expired",
-            err_code="errors.tokenExpiredError",
-            context={
-                'message': str(e)
-            }
-        )
-    except Exception as e:
-        raise ErtisError(
-            status_code=401,
-            err_msg="Provided token is invalid",
-            err_code="errors.tokenIsInvalid",
-            context={
-                'e': str(e)
-            }
-        )
-
-    return decoded
-
-
 def generate_token(payload, secret, token_ttl):
     payload.update({
         'exp': _get_exp(token_ttl),
@@ -80,32 +54,10 @@ class ErtisTokenService(ErtisGenericService):
 
         return token
 
-    def refresh_token(self, token, secret, token_ttl, verify):
-        try:
-            decoded = validate_token(token, secret, verify)
-
-            self.find_one_by_id(
-                decoded['prn'],
-                collection='users'
-            )
-
-        except ExpiredSignatureError as e:
-            raise ErtisError(
-                status_code=401,
-                err_msg="Provided token has expired",
-                err_code="errors.tokenExpiredError",
-                context={
-                    'message': str(e)
-                }
-            )
-        except Exception as e:
-            raise ErtisError(
-                err_msg="Invalid token provided. {}".format(str(e)),
-                err_code="errors.badRequest",
-                status_code="400"
-            )
+    @staticmethod
+    def refresh_token(user, secret, token_ttl):
 
         payload = {
-            "prn": decoded["prn"],
+            "prn": str(user["_id"]),
         }
         return generate_token(payload, secret, token_ttl)

@@ -3,7 +3,8 @@ import json
 from flask import request, Response
 
 from passlib.hash import bcrypt
-from src.custom_models.tokens.tokens import validate_token
+
+from src.custom_services.security import ErtisSecurityManager
 from src.utils.errors import ErtisError
 from src.utils.json_helpers import bson_to_json
 
@@ -11,6 +12,8 @@ from src.utils.json_helpers import bson_to_json
 def init_api(app, settings):
     @app.route('/api/v1/users/<user_id>/change-password', methods=['POST'])
     def change_password(user_id):
+        verify_token = settings['verify_token']
+        app_secret = settings['application_secret']
         auth_header = request.headers.get('Authorization')
         try:
             body = json.loads(request.data)
@@ -31,12 +34,22 @@ def init_api(app, settings):
                 status_code=401
             )
 
-        decoded_token = validate_token(auth_header.split(' ')[1], settings['application_secret'], settings['verify_token'])
+        try:
+            token = auth_header.split(' ')[1]
+        except Exception as e:
+            raise ErtisError(
+                err_code="errors.providedBearerTokenIsInvalid",
+                err_msg="Invalid token provided.",
+                status_code=401,
+                context={
+                    'message': str(e)
+                }
+            )
 
-        service = app.generic_service
-        user = service.find_one_by_id(user_id, 'users')
+        security_manager = ErtisSecurityManager(app.db)
+        user = security_manager.load_user(token, app_secret, verify_token)
 
-        if decoded_token['prn'] != str(user['_id']):
+        if user_id != str(user['_id']):
             raise ErtisError(
                 err_code="errors.userNotAuthorizedForChangePassword",
                 err_msg="Users can not change another user's password",
@@ -67,7 +80,11 @@ def init_api(app, settings):
 
         hashed_password = bcrypt.hash(new_password)
         user['password'] = hashed_password
-        service.replace(user, 'users')
+
+        user.pop('permissions', None)
+
+        g_service = app.generic_service
+        g_service.replace(user, 'users')
 
         user.pop('password')
 

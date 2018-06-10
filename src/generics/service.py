@@ -3,7 +3,7 @@ import json
 
 from jsonschema import validate, ValidationError
 
-from src.custom_models.users.users import delete_critical_fields
+from src.custom_services.users.users import delete_critical_fields
 from src.utils.errors import ErtisError
 from src.generics.repository import ErtisGenericRepository
 from src.utils.json_helpers import object_hook, bson_to_json

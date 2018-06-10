@@ -1,8 +1,10 @@
+import json
+
 from flask import request, Response
 
-from src.custom_models.me.me import ErtisMeService
-from src.custom_models.tokens.tokens import validate_token
+from src.custom_services.security import ErtisSecurityManager
 from src.utils.errors import ErtisError
+from src.utils.json_helpers import bson_to_json
 
 
 def init_api(app, settings):
@@ -36,10 +38,11 @@ def init_api(app, settings):
 
         token = auth_header[1]
 
-        decoded_token = validate_token(token, settings['application_secret'], settings['verify_token'])
+        security_manager = ErtisSecurityManager(app.db)
+        user = security_manager.load_user(token, settings['application_secret'], settings['verify_token'])
 
         return Response(
-            ErtisMeService.get_user(app.generic_service, decoded_token),
+            json.dumps(user, default=bson_to_json),
             mimetype='application/json',
             status=200
         )

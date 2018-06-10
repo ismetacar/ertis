@@ -2,7 +2,7 @@ import logging
 
 from flask import request, Response
 
-from src.custom_models.tokens.tokens import validate_token
+from src.custom_services.security import ErtisSecurityManager
 from src.utils import query_helpers
 from src.utils.errors import ErtisError
 
@@ -15,7 +15,7 @@ def rename(new_name):
     return decorator
 
 
-def ensure_token_provided(req, api_name, secret, verify):
+def ensure_token_provided(db, req, api_name, secret, verify):
     auth_header = req.headers.get('Authorization')
     if not auth_header:
         raise ErtisError(
@@ -43,8 +43,8 @@ def ensure_token_provided(req, api_name, secret, verify):
         )
 
     token = auth_header[1]
-
-    validate_token(token, secret, verify)
+    security_manager = ErtisSecurityManager(db)
+    security_manager.load_user(token, secret, verify)
 
 
 class GenericErtisApi(object):
@@ -123,6 +123,7 @@ class GenericErtisApi(object):
             def query():
                 if not self.allow_to_anonymous:
                     ensure_token_provided(
+                        app.db,
                         request, self.resource_name,
                         self.settings['application_secret'], self.settings['verify_token']
                     )
@@ -142,6 +143,7 @@ class GenericErtisApi(object):
             def read(resource_id):
                 if not self.allow_to_anonymous:
                     ensure_token_provided(
+                        app.db,
                         request, self.resource_name,
                         self.settings['application_secret'], self.settings['verify_token']
                     )
@@ -161,6 +163,7 @@ class GenericErtisApi(object):
             def create():
                 if not self.allow_to_anonymous:
                     ensure_token_provided(
+                        app.db,
                         request, self.resource_name,
                         self.settings['application_secret'], self.settings['verify_token']
                     )
@@ -183,6 +186,7 @@ class GenericErtisApi(object):
             def update(resource_id):
                 if not self.allow_to_anonymous:
                     ensure_token_provided(
+                        app.db,
                         request, self.resource_name,
                         self.settings['application_secret'], self.settings['verify_token']
                     )
@@ -206,6 +210,7 @@ class GenericErtisApi(object):
             def delete(resource_id):
                 if not self.allow_to_anonymous:
                     ensure_token_provided(
+                        app.db,
                         request, self.resource_name,
                         self.settings['application_secret'], self.settings['verify_token']
                     )

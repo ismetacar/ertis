@@ -2,7 +2,7 @@ import json
 
 from flask import request, Response
 
-from src.custom_models.tokens.tokens import validate_token
+from src.custom_services.security import ErtisSecurityManager
 from src.utils.errors import ErtisError
 from src.utils.json_helpers import bson_to_json
 
@@ -44,7 +44,8 @@ def init_api(app, settings):
 
         token = auth_header[1]
 
-        validate_token(token, settings['application_secret'], settings['verify_token'])
+        security_manager = ErtisSecurityManager(app.db)
+        security_manager.load_user(token, settings['application_secret'], settings['verify_token'])
 
         links = []
         for rule in app.url_map.iter_rules():

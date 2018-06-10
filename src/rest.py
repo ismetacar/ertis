@@ -1,5 +1,5 @@
-from src.custom_models.users.schema import CREATE_USER_SCHEMA, UPDATE_USER_SCHEMA
-from src.custom_models.users.users import pipeline_functions
+from src.custom_services.users.schema import CREATE_USER_SCHEMA, UPDATE_USER_SCHEMA
+from src.custom_services.users.users import pipeline_functions
 from src.generics import api
 from src.generics.service import ErtisGenericService
 

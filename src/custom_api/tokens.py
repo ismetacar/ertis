@@ -3,8 +3,9 @@ import json
 from flask import request, Response
 from jsonschema import validate, ValidationError
 
-from src.custom_models.tokens.schema import CREATE_TOKEN_SCHEMA
-from src.custom_models.tokens.tokens import ErtisTokenService
+from src.custom_services.security import ErtisSecurityManager
+from src.custom_services.tokens.schema import CREATE_TOKEN_SCHEMA
+from src.custom_services.tokens.tokens import ErtisTokenService
 from src.utils.errors import ErtisError
 
 
@@ -57,14 +58,21 @@ def init_api(app, settings):
                 }
             )
 
-        token = body['token']
+        token = body.get('token')
+        if not token:
+            raise ErtisError(
+                err_msg="Token is required",
+                err_code="errors.tokenRequired",
+                status_code=400
+            )
+
+        security_manager = ErtisSecurityManager(app.db)
+        user = security_manager.load_user(token, settings['application_secret'], settings['verify_token'])
 
         new_token = ErtisTokenService.refresh_token(
-            app.generic_service,
-            token,
+            user,
             settings['application_secret'],
             settings['token_ttl'],
-            settings['verify_token']
         )
 
         response = {
