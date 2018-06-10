@@ -179,7 +179,7 @@ class ErtisGenericRepository(object):
             collection=collection
         )
 
-    def query(self, where=None, select=None, limit=None, skip=None, sort=None, collection=None):
+    def query(self, where=None, select=None, limit=None, sort=None, skip=None, collection=None):
 
         try:
             where = _pre_process_where(where)
@@ -188,7 +188,7 @@ class ErtisGenericRepository(object):
                 select = None
 
             if not limit or limit > 500:
-                limit = 500
+                limit = 200
 
             cur = self.db[collection].find(where, select)
 
