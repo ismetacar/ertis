@@ -51,7 +51,10 @@ def init_api(app, settings):
             raise ErtisError(
                 err_code="errors.badRequest",
                 err_msg="Invalid json provided",
-                status_code=400
+                status_code=400,
+                context={
+                    'message': str(e)
+                }
             )
 
         token = body['token']
