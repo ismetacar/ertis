@@ -12,16 +12,16 @@ from src.utils.json_helpers import bson_to_json
 from passlib.hash import bcrypt
 
 
-def _get_exp():
-    exp_range = datetime.timedelta(minutes=15)
+def _get_exp(token_ttl):
+    exp_range = datetime.timedelta(minutes=token_ttl)
     return temporal_helpers.to_timestamp(
         (temporal_helpers.utc_now() + exp_range)
     )
 
 
-def validate_token(token):
+def validate_token(token, secret):
     try:
-        decoded = jwt.decode(token, key='123456789', algorithms='HS256')
+        decoded = jwt.decode(token, key=secret, algorithms='HS256')
 
     except ExpiredSignatureError as e:
         raise ErtisError(
@@ -42,18 +42,18 @@ def validate_token(token):
     return decoded
 
 
-def generate_token(payload):
+def generate_token(payload, secret, token_ttl):
     payload.update({
-        'exp': _get_exp(),
+        'exp': _get_exp(token_ttl),
         'jti': str(ObjectId()),
         'iat': temporal_helpers.to_timestamp(temporal_helpers.utc_now())
     })
-    return jwt.encode(payload=payload, key='123456789', algorithm='HS256').decode('utf-8')
+    return jwt.encode(payload=payload, key=secret, algorithm='HS256').decode('utf-8')
 
 
 class ErtisTokenService(ErtisGenericService):
 
-    def craft_token(self, credentials):
+    def craft_token(self, credentials, secret, token_ttl):
         user = self.find_one_by(
             where={
                 'email': credentials['email']
@@ -73,13 +73,13 @@ class ErtisTokenService(ErtisGenericService):
         }
 
         payload = json.loads(json.dumps(payload, default=bson_to_json))
-        token = generate_token(payload)
+        token = generate_token(payload, secret, token_ttl)
 
         return token
 
-    def refresh_token(self, token):
+    def refresh_token(self, token, secret, token_ttl):
         try:
-            decoded = jwt.decode(token, key='123456789', algorithms='HS256')
+            decoded = jwt.decode(token, key=secret, algorithms='HS256')
             self.find_one_by_id(
                 decoded['prn'],
                 collection='users'
@@ -98,6 +98,7 @@ class ErtisTokenService(ErtisGenericService):
                 status_code="400"
             )
 
-        return generate_token({
+        payload = {
             "prn": decoded["prn"],
-        })
+        }
+        return generate_token(payload, secret, token_ttl)

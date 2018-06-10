@@ -4,10 +4,11 @@ from src.generics import api
 from src.generics.service import ErtisGenericService
 
 
-def register_api(app):
+def register_api(app, settings):
 
     api.GenericErtisApi(
         app,
+        settings,
         endpoint_prefix='/api/v1/users',
         methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
         resource_name='users',
@@ -20,6 +21,7 @@ def register_api(app):
 
     api.GenericErtisApi(
         app,
+        settings,
         endpoint_prefix='/api/v1/positions',
         methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
         resource_name='positions',
@@ -29,6 +31,7 @@ def register_api(app):
 
     api.GenericErtisApi(
         app,
+        settings,
         endpoint_prefix='/api/v1/user-groups',
         methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
         resource_name='user_groups',
@@ -38,6 +41,7 @@ def register_api(app):
 
     api.GenericErtisApi(
         app,
+        settings,
         endpoint_prefix='/api/v1/departments',
         methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
         resource_name='departments',
@@ -47,6 +51,7 @@ def register_api(app):
 
     api.GenericErtisApi(
         app,
+        settings,
         endpoint_prefix='/api/v1/materials',
         methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
         resource_name='materials',
@@ -56,6 +61,7 @@ def register_api(app):
 
     api.GenericErtisApi(
         app,
+        settings,
         endpoint_prefix='/api/v1/material-types',
         methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
         resource_name='material_types',
@@ -65,6 +71,7 @@ def register_api(app):
 
     api.GenericErtisApi(
         app,
+        settings,
         endpoint_prefix='/api/v1/projects',
         methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
         resource_name='projects',
@@ -74,6 +81,7 @@ def register_api(app):
 
     api.GenericErtisApi(
         app,
+        settings,
         endpoint_prefix='/api/v1/worksites',
         methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
         resource_name='worksites',
@@ -83,6 +91,7 @@ def register_api(app):
 
     api.GenericErtisApi(
         app,
+        settings,
         endpoint_prefix='/api/v1/permission-groups',
         methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
         resource_name='permission_groups',

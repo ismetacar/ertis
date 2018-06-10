@@ -14,7 +14,7 @@ def has_no_empty_params(rule):
 
 
 def init_api(app, settings):
-    @app.route('/api/v1/api-map', methods=['GET'])
+    @app.route('/api/{}/api-map'.format(settings['api_version']), methods=['GET'])
     def site_map():
         auth_header = request.headers.get('Authorization')
         if not auth_header:
@@ -44,7 +44,7 @@ def init_api(app, settings):
 
         token = auth_header[1]
 
-        validate_token(token)
+        validate_token(token, settings['application_secret'])
 
         links = []
         for rule in app.url_map.iter_rules():

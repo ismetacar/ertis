@@ -1,13 +1,24 @@
 import json
+import optparse
 import traceback
 
-from flask import Response
+import os
+from flask import Response, Config
 
 from src import create_app
 from src.utils.errors import ErtisError
 from src.utils.json_helpers import bson_to_json
 
-app = create_app()
+
+def config_settings():
+    config_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "confs/local.py"))
+    with open(config_file_path, 'r') as f:
+        confs = json.load(f)
+    f.close()
+    return confs
+
+
+app = create_app(config_settings())
 
 
 @app.errorhandler(Exception)

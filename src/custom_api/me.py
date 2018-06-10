@@ -6,7 +6,7 @@ from src.utils.errors import ErtisError
 
 
 def init_api(app, settings):
-    @app.route('/api/v1/me', methods=['GET'])
+    @app.route('/api/{}/me'.format(settings['api_version']), methods=['GET'])
     def me():
         auth_header = request.headers.get('Authorization')
         if not auth_header:
@@ -36,7 +36,7 @@ def init_api(app, settings):
 
         token = auth_header[1]
 
-        decoded_token = validate_token(token)
+        decoded_token = validate_token(token, settings['application_secret'])
 
         return Response(
             ErtisMeService.get_user(app.generic_service, decoded_token),

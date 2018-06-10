@@ -9,7 +9,7 @@ from src.utils.errors import ErtisError
 
 
 def init_api(app, settings):
-    @app.route('/api/v1/tokens', methods=['POST'])
+    @app.route('/api/{}/tokens'.format(settings['api_version']), methods=['POST'])
     def create_token():
         body = json.loads(request.data)
         try:
@@ -30,7 +30,12 @@ def init_api(app, settings):
             'password': body['password']
         }
 
-        token = ErtisTokenService.craft_token(app.generic_service, credentials)
+        token = ErtisTokenService.craft_token(
+            app.generic_service,
+            credentials,
+            settings['application_secret'],
+            settings['token_ttl']
+        )
 
         response = {
             'token': token
@@ -38,7 +43,7 @@ def init_api(app, settings):
 
         return Response(json.dumps(response), mimetype='application/json', status=200)
 
-    @app.route('/api/v1/tokens/refresh', methods=['POST'])
+    @app.route('/api/{}/tokens/refresh'.format(settings['api_version']), methods=['POST'])
     def refresh_token():
         try:
             body = json.loads(request.data)
@@ -51,12 +56,14 @@ def init_api(app, settings):
 
         token = body['token']
 
-        new_token = ErtisTokenService.refresh_token(app.generic_service, token)
+        new_token = ErtisTokenService.refresh_token(
+            app.generic_service,
+            token,
+            settings['application_secret'],
+            settings['token_ttl'])
 
         response = {
             'token': new_token
         }
 
         return Response(json.dumps(response), mimetype='application/json', status=201)
-
-
