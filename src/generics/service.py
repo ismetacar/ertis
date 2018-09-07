@@ -4,31 +4,23 @@ import json
 
 from jsonschema import validate, ValidationError
 
-from src.custom_services.users.users import delete_critical_fields
+from src.resources.users.users import delete_critical_fields
 from src.utils.errors import ErtisError
-from src.generics.repository import ErtisGenericRepository
+from src.generics.repository import ErtisGenericRepository, run_function_pool
 from src.utils.json_helpers import object_hook, bson_to_json
-
-
-def run_function_pool(generic_service, data, pipeline, when=None):
-    p_functions = pipeline() if pipeline else {}
-    before_create_funcs = p_functions.get(when, [])
-    for f in before_create_funcs:
-        data = f(data, generic_service)
 
 
 class ErtisGenericService(ErtisGenericRepository):
 
     def get(self, _id, resource_name):
         resource = self.find_one_by_id(_id, resource_name)
-        delete_critical_fields(self, resource)
         return json.dumps(resource, default=bson_to_json)
 
-    def post(self, user, data, resource_name, validate_by=None, pipeline=None):
-        data = object_hook(json.loads(data))
+    def post(self, user, data, resource_name, validate_by=None, before_create=None, after_create=None):
+        resource = object_hook(json.loads(data))
         if validate_by:
             try:
-                validate(data, validate_by)
+                validate(resource, validate_by)
             except ValidationError as e:
                 raise ErtisError(
                     err_code="errors.validationError",
@@ -40,18 +32,36 @@ class ErtisGenericService(ErtisGenericRepository):
                     }
                 )
 
-        run_function_pool(self, data, pipeline, when='before_create')
-        data['_sys'] = {
+        run_function_pool(
+            before_create,
+            resource=resource,
+            user=user,
+            generic_service=self,
+            resource_name=resource_name,
+            _resource=resource,
+            data=data
+        )
+
+        resource['_sys'] = {
             'created_by': user['email'],
             'created_at': datetime.datetime.utcnow(),
             'collection': resource_name
         }
-        resource = self.save(data, resource_name)
-        run_function_pool(self, data, pipeline, when='after_create')
+        resource = self.save(resource, resource_name)
+
+        run_function_pool(
+            after_create,
+            resource=resource,
+            user=user,
+            generic_service=self,
+            resource_name=resource_name,
+            _resource=resource,
+            data=data
+        )
 
         return json.dumps(resource, default=bson_to_json)
 
-    def put(self, user, _id, data, resource_name, validate_by=None, pipeline=None):
+    def put(self, user, _id, data, resource_name, validate_by=None, before_update=None, after_update=None):
         data = object_hook(json.loads(data))
         if validate_by:
             try:
@@ -79,7 +89,15 @@ class ErtisGenericService(ErtisGenericRepository):
                 status_code=409
             )
 
-        run_function_pool(self, resource, pipeline, when='before_update')
+        run_function_pool(
+            before_update,
+            resource=resource,
+            user=user,
+            generic_service=self,
+            resource_name=resource_name,
+            _resource=_resource,
+            data=data
+        )
 
         resource['_sys'].update({
             'modified_by': user['email'],
@@ -90,22 +108,46 @@ class ErtisGenericService(ErtisGenericRepository):
             resource,
             collection=resource_name
         )
-        run_function_pool(self, resource, pipeline, when='after_update')
+
+        run_function_pool(
+            after_update,
+            resource=resource,
+            user=user,
+            generic_service=self,
+            resource_name=resource_name,
+            data=data,
+            _resource=_resource
+        )
 
         return json.dumps(resource, default=bson_to_json)
 
-    def delete(self, _id, resource_name, pipeline=None):
+    def delete(self, user, _id, resource_name, before_delete=None, after_delete=None):
         resource = self.find_one_by_id(_id, collection=resource_name)
 
-        run_function_pool(self, resource, pipeline, when='before_delete')
+        run_function_pool(
+            before_delete,
+            resource=resource,
+            user=user,
+            resource_name=resource_name,
+            resource_id=_id,
+            generic_service=self,
+            _resource=resource
+        )
+
         self.remove_one_by_id(_id, collection=resource_name)
-        run_function_pool(self, resource, pipeline, when='after_delete')
+
+        run_function_pool(
+            after_delete,
+            resource=resource,
+            user=user,
+            resource_name=resource_name,
+            resource_id=_id,
+            generic_service=self,
+            _resource=resource,
+        )
 
     def filter(self, where, select, limit, sort, skip, resource_name):
         resources, count = self.query(where, select, limit, sort, skip, collection=resource_name)
-
-        for resource in resources:
-            delete_critical_fields(resource, self)
 
         response = {
             'items': resources,

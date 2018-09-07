@@ -1,3 +1,5 @@
+import inspect
+
 from bson import ObjectId
 from pymongo.errors import OperationFailure, DuplicateKeyError
 
@@ -75,6 +77,25 @@ def _pre_process_where(where):
 
 def create_id():
     return ObjectId()
+
+
+def run_function_pool(pipeline=None, **kwargs):
+    resource = kwargs.get('resource', None)
+    if not resource:
+        raise ErtisError(
+            err_code="errors.internalErrorOccurred",
+            err_msg="Internal error occurred",
+            status_code=500
+        )
+    for f in pipeline:
+        parameter_names = list(inspect.signature(f).parameters.keys())
+        params = []
+        for parameter in parameter_names:
+            if parameter in kwargs:
+                params.append(kwargs[parameter])
+
+        resource = f(*params)
+        kwargs['resource'] = resource
 
 
 class ErtisGenericRepository(object):

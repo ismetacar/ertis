@@ -1,18 +1,28 @@
+import functools
 import logging
 
 from flask import request, Response
 
-from src.custom_services.security import ErtisSecurityManager
+from src.resources.security import ErtisSecurityManager
 from src.utils import query_helpers
 from src.utils.errors import ErtisError
 
 
 def rename(new_name):
-    def decorator(f):
+    def wrapper(f):
         f.__name__ = new_name
         return f
 
-    return decorator
+    return wrapper
+
+
+def load_user(db, req, resource_name, settings):
+    user = ensure_token_provided(
+        db,
+        req, resource_name,
+        settings['application_secret'], settings['verify_token']
+    )
+    return user
 
 
 def ensure_token_provided(db, req, api_name, secret, verify):
@@ -59,8 +69,9 @@ class GenericErtisApi(object):
     }
 
     def __init__(self, app, settings, endpoint_prefix, methods, resource_name, resource_service,
-                 create_validation_schema=None, update_validation_schema=None, pipeline_functions=None,
-                 allow_to_anonymous=False):
+                 create_validation_schema=None, update_validation_schema=None, before_create=None,
+                 after_create=None, before_update=None, after_update=None, before_delete=None,
+                 after_delete=None):
         """
 
         if a generated instance is subjected to generate_endpoints() function, APIs are created for basic HTTP methods
@@ -88,9 +99,8 @@ class GenericErtisApi(object):
         :param resource_service: Service to be used for related API
         :param create_validation_schema: Validation schemes for POST method
         :param update_validation_schema: Validation schemes for PUT method
-        :param pipeline_functions: Function pool to work before and after the related operation
-        :param allow_to_anonymous: Is token required for related API
         """
+
         self.app = app
         self.settings = settings
         self.current_app = app
@@ -100,8 +110,12 @@ class GenericErtisApi(object):
         self.resource_service = resource_service
         self.create_validation_schema = create_validation_schema
         self.update_validation_schema = update_validation_schema
-        self.pipeline_functions = pipeline_functions
-        self.allow_to_anonymous = allow_to_anonymous
+        self.before_create = before_create
+        self.after_create = after_create
+        self.before_update = before_update
+        self.after_update = after_update
+        self.before_delete = before_delete
+        self.after_delete = after_delete
         self.logger = logging.getLogger('resource.' + self.resource_name + '.logger')
 
     def generate_urls(self):
@@ -121,12 +135,7 @@ class GenericErtisApi(object):
             @app.route(query_url, methods=['POST'])
             @rename(self.resource_name + '_query')
             def query():
-                if not self.allow_to_anonymous:
-                    ensure_token_provided(
-                        app.db,
-                        request, self.resource_name,
-                        self.settings['application_secret'], self.settings['verify_token']
-                    )
+                load_user(app.db, request, self.resource_name, self.settings)
                 where, select, limit, sort, skip = query_helpers.parse(request)
                 return Response(
                     self.resource_service.filter(
@@ -141,12 +150,7 @@ class GenericErtisApi(object):
             @app.route(get_url, methods=['GET'])
             @rename(self.resource_name + '_read')
             def read(resource_id):
-                if not self.allow_to_anonymous:
-                    ensure_token_provided(
-                        app.db,
-                        request, self.resource_name,
-                        self.settings['application_secret'], self.settings['verify_token']
-                    )
+                load_user(app.db, request, self.resource_name, self.settings)
                 return Response(
                     self.resource_service.get(
                         app.generic_service,
@@ -161,12 +165,7 @@ class GenericErtisApi(object):
             @app.route(post_url, methods=['POST'])
             @rename(self.resource_name + '_create')
             def create():
-                if not self.allow_to_anonymous:
-                    user = ensure_token_provided(
-                        app.db,
-                        request, self.resource_name,
-                        self.settings['application_secret'], self.settings['verify_token']
-                    )
+                user = load_user(app.db, request, self.resource_name, self.settings)
                 data = request.data
                 return Response(
                     self.resource_service.post(
@@ -175,7 +174,8 @@ class GenericErtisApi(object):
                         data,
                         resource_name=self.resource_name,
                         validate_by=self.create_validation_schema,
-                        pipeline=self.pipeline_functions
+                        before_create=self.before_create,
+                        after_create=self.after_create
                     ),
                     status=self.STATUS_CODE_MAPPING['CREATE'],
                     mimetype='application/json'
@@ -185,12 +185,7 @@ class GenericErtisApi(object):
             @app.route(update_url, methods=['PUT'])
             @rename(self.resource_name + '_update')
             def update(resource_id):
-                if not self.allow_to_anonymous:
-                    user = ensure_token_provided(
-                        app.db,
-                        request, self.resource_name,
-                        self.settings['application_secret'], self.settings['verify_token']
-                    )
+                user = load_user(app.db, request, self.resource_name, self.settings)
                 data = request.data
                 return Response(
                     self.resource_service.put(
@@ -200,7 +195,8 @@ class GenericErtisApi(object):
                         data,
                         resource_name=self.resource_name,
                         validate_by=self.update_validation_schema,
-                        pipeline=self.pipeline_functions
+                        before_update=self.before_update,
+                        after_update=self.after_update
                     ),
                     mimetype='application/json',
                     status=self.STATUS_CODE_MAPPING['UPDATE']
@@ -210,18 +206,15 @@ class GenericErtisApi(object):
             @app.route(delete_url, methods=['DELETE'])
             @rename(self.resource_name + '_delete')
             def delete(resource_id):
-                if not self.allow_to_anonymous:
-                    ensure_token_provided(
-                        app.db,
-                        request, self.resource_name,
-                        self.settings['application_secret'], self.settings['verify_token']
-                    )
+                user = load_user(app.db, request, self.resource_name, self.settings)
                 return Response(
                     self.resource_service.delete(
                         app.generic_service,
+                        user,
                         resource_id,
                         resource_name=self.resource_name,
-                        pipeline=self.pipeline_functions
+                        before_delete=self.before_delete,
+                        after_delete=self.after_delete
                     ),
                     status=self.STATUS_CODE_MAPPING['DELETE']
                 )

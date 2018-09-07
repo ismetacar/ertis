@@ -3,9 +3,9 @@ import json
 from flask import request, Response
 from jsonschema import validate, ValidationError
 
-from src.custom_services.security import ErtisSecurityManager
-from src.custom_services.tokens.schema import CREATE_TOKEN_SCHEMA
-from src.custom_services.tokens.tokens import ErtisTokenService
+from src.resources.security import ErtisSecurityManager
+from src.resources.tokens.schema import CREATE_TOKEN_SCHEMA
+from src.resources.tokens.tokens import ErtisTokenService
 from src.utils.errors import ErtisError
 
 

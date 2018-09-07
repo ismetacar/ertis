@@ -2,7 +2,7 @@ import json
 
 from flask import request, Response
 
-from src.custom_services.security import ErtisSecurityManager
+from src.resources.security import ErtisSecurityManager
 from src.utils.errors import ErtisError
 from src.utils.json_helpers import bson_to_json
 

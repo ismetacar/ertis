@@ -1,11 +1,10 @@
-from src.custom_services.users.schema import CREATE_USER_SCHEMA, UPDATE_USER_SCHEMA
-from src.custom_services.users.users import pipeline_functions
 from src.generics import api
 from src.generics.service import ErtisGenericService
+from src.resources.permission_groups import permission_groups, permission_groups_schema
+from src.resources.users import users, users_schema
 
 
 def register_api(app, settings):
-
     api.GenericErtisApi(
         app,
         settings,
@@ -13,80 +12,22 @@ def register_api(app, settings):
         methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
         resource_name='users',
         resource_service=ErtisGenericService,
-        create_validation_schema=CREATE_USER_SCHEMA,
-        update_validation_schema=UPDATE_USER_SCHEMA,
-        pipeline_functions=pipeline_functions,
-        allow_to_anonymous=False
-    ).generate_endpoints()
-
-    api.GenericErtisApi(
-        app,
-        settings,
-        endpoint_prefix='/api/v1/positions',
-        methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
-        resource_name='positions',
-        resource_service=ErtisGenericService,
-        allow_to_anonymous=False
-    ).generate_endpoints()
-
-    api.GenericErtisApi(
-        app,
-        settings,
-        endpoint_prefix='/api/v1/user-groups',
-        methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
-        resource_name='user_groups',
-        resource_service=ErtisGenericService,
-        allow_to_anonymous=False
-    ).generate_endpoints()
-
-    api.GenericErtisApi(
-        app,
-        settings,
-        endpoint_prefix='/api/v1/departments',
-        methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
-        resource_name='departments',
-        resource_service=ErtisGenericService,
-        allow_to_anonymous=False
-    ).generate_endpoints()
-
-    api.GenericErtisApi(
-        app,
-        settings,
-        endpoint_prefix='/api/v1/materials',
-        methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
-        resource_name='materials',
-        resource_service=ErtisGenericService,
-        allow_to_anonymous=False
-    ).generate_endpoints()
-
-    api.GenericErtisApi(
-        app,
-        settings,
-        endpoint_prefix='/api/v1/material-types',
-        methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
-        resource_name='material_types',
-        resource_service=ErtisGenericService,
-        allow_to_anonymous=False
-    ).generate_endpoints()
-
-    api.GenericErtisApi(
-        app,
-        settings,
-        endpoint_prefix='/api/v1/projects',
-        methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
-        resource_name='projects',
-        resource_service=ErtisGenericService,
-        allow_to_anonymous=False
-    ).generate_endpoints()
-
-    api.GenericErtisApi(
-        app,
-        settings,
-        endpoint_prefix='/api/v1/worksites',
-        methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
-        resource_name='worksites',
-        resource_service=ErtisGenericService,
-        allow_to_anonymous=False
+        create_validation_schema=users_schema.CREATE_USER_SCHEMA,
+        update_validation_schema=users_schema.UPDATE_USER_SCHEMA,
+        before_create=[
+            users.hash_pwd,
+            users.ensure_email_is_unique,
+            users.validate_permission_group_in_user
+        ],
+        after_create=[],
+        before_update=[
+            users.hash_updated_password,
+            users.ensure_email_is_unique,
+            users.validate_permission_group_in_user,
+        ],
+        after_update=[],
+        before_delete=[],
+        after_delete=[]
     ).generate_endpoints()
 
     api.GenericErtisApi(
@@ -96,5 +37,45 @@ def register_api(app, settings):
         methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
         resource_name='permission_groups',
         resource_service=ErtisGenericService,
-        allow_to_anonymous=False
+        create_validation_schema=permission_groups_schema.CREATE_PERMISSION_GROUP_SCHEMA,
+        update_validation_schema=permission_groups_schema.UPDATE_PERMISSION_GROUP_SCHEMA,
+        before_create=[
+            permission_groups.generate_permission_group_slug,
+            permission_groups.check_slug_conflict
+        ],
+        after_create=[],
+        before_update=[
+            permission_groups.disallow_predefined_permission_group_operations,
+            permission_groups.check_slug_conflict
+        ],
+        after_update=[],
+        before_delete=[
+            permission_groups.disallow_predefined_permission_group_operations
+        ],
+        after_delete=[]
+    ).generate_endpoints()
+
+    api.GenericErtisApi(
+        app,
+        settings,
+        endpoint_prefix='/api/v1/permission-groups',
+        methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
+        resource_name='permission_groups',
+        resource_service=ErtisGenericService,
+        create_validation_schema=permission_groups_schema.CREATE_PERMISSION_GROUP_SCHEMA,
+        update_validation_schema=permission_groups_schema.UPDATE_PERMISSION_GROUP_SCHEMA,
+        before_create=[
+            permission_groups.generate_permission_group_slug,
+            permission_groups.check_slug_conflict
+        ],
+        after_create=[],
+        before_update=[
+            permission_groups.disallow_predefined_permission_group_operations,
+            permission_groups.check_slug_conflict
+        ],
+        after_update=[],
+        before_delete=[
+            permission_groups.disallow_predefined_permission_group_operations
+        ],
+        after_delete=[]
     ).generate_endpoints()
