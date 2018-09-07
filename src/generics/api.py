@@ -1,4 +1,3 @@
-import functools
 import logging
 
 from flask import request, Response
