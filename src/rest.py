@@ -14,6 +14,7 @@ def register_api(app, settings):
         resource_service=ErtisGenericService,
         create_validation_schema=users_schema.CREATE_USER_SCHEMA,
         update_validation_schema=users_schema.UPDATE_USER_SCHEMA,
+        project_bounded=False,
         before_create=[
             users.hash_pwd,
             users.ensure_email_is_unique,
@@ -33,12 +34,23 @@ def register_api(app, settings):
     api.GenericErtisApi(
         app,
         settings,
+        endpoint_prefix='/api/v1/projects',
+        methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
+        resource_name='projects',
+        resource_service=ErtisGenericService,
+        project_bounded=False
+    ).generate_endpoints()
+
+    api.GenericErtisApi(
+        app,
+        settings,
         endpoint_prefix='/api/v1/permission-groups',
         methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
         resource_name='permission_groups',
         resource_service=ErtisGenericService,
         create_validation_schema=permission_groups_schema.CREATE_PERMISSION_GROUP_SCHEMA,
         update_validation_schema=permission_groups_schema.UPDATE_PERMISSION_GROUP_SCHEMA,
+        project_bounded=False,
         before_create=[
             permission_groups.generate_permission_group_slug,
             permission_groups.check_slug_conflict
@@ -58,24 +70,9 @@ def register_api(app, settings):
     api.GenericErtisApi(
         app,
         settings,
-        endpoint_prefix='/api/v1/permission-groups',
-        methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
-        resource_name='permission_groups',
+        endpoint_prefix='/api/v1/projects/{}/materials',
         resource_service=ErtisGenericService,
-        create_validation_schema=permission_groups_schema.CREATE_PERMISSION_GROUP_SCHEMA,
-        update_validation_schema=permission_groups_schema.UPDATE_PERMISSION_GROUP_SCHEMA,
-        before_create=[
-            permission_groups.generate_permission_group_slug,
-            permission_groups.check_slug_conflict
-        ],
-        after_create=[],
-        before_update=[
-            permission_groups.disallow_predefined_permission_group_operations,
-            permission_groups.check_slug_conflict
-        ],
-        after_update=[],
-        before_delete=[
-            permission_groups.disallow_predefined_permission_group_operations
-        ],
-        after_delete=[]
+        resource_name='materials',
+        methods=['GET', 'POST', 'PUT', 'DELETE', 'QUERY'],
+        project_bounded=True
     ).generate_endpoints()

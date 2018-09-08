@@ -3,10 +3,13 @@ from passlib import hash
 from src.utils.errors import ErtisError
 
 
-def ensure_email_is_unique(resource, generic_service):
+def ensure_email_is_unique(resource, generic_service, user):
     email = resource.get('email', None)
 
     if not email:
+        return resource
+
+    if user['email'] == email:
         return resource
 
     users = generic_service.find_one_by(

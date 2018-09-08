@@ -17,6 +17,9 @@ class ErtisGenericService(ErtisGenericRepository):
 
     def post(self, user, data, resource_name, validate_by=None, before_create=None, after_create=None):
         resource = object_hook(json.loads(data))
+        resource.update({
+            'client_id': user['client_id']
+        })
         if validate_by:
             try:
                 validate(resource, validate_by)
@@ -31,15 +34,16 @@ class ErtisGenericService(ErtisGenericRepository):
                     }
                 )
 
-        run_function_pool(
-            before_create,
-            resource=resource,
-            user=user,
-            generic_service=self,
-            resource_name=resource_name,
-            _resource=resource,
-            data=data
-        )
+        if before_create:
+            run_function_pool(
+                before_create,
+                resource=resource,
+                user=user,
+                generic_service=self,
+                resource_name=resource_name,
+                _resource=resource,
+                data=data
+            )
 
         resource['_sys'] = {
             'created_by': user['email'],
@@ -48,20 +52,24 @@ class ErtisGenericService(ErtisGenericRepository):
         }
         resource = self.save(resource, resource_name)
 
-        run_function_pool(
-            after_create,
-            resource=resource,
-            user=user,
-            generic_service=self,
-            resource_name=resource_name,
-            _resource=resource,
-            data=data
-        )
+        if after_create:
+            run_function_pool(
+                after_create,
+                resource=resource,
+                user=user,
+                generic_service=self,
+                resource_name=resource_name,
+                _resource=resource,
+                data=data
+            )
 
         return json.dumps(resource, default=bson_to_json)
 
     def put(self, user, _id, data, resource_name, validate_by=None, before_update=None, after_update=None):
         data = object_hook(json.loads(data))
+        data.update({
+            'client_id': user['client_id']
+        })
         if validate_by:
             try:
                 validate(data, validate_by)
@@ -87,16 +95,16 @@ class ErtisGenericService(ErtisGenericRepository):
                 err_code="errors.identicalDocumentError",
                 status_code=409
             )
-
-        run_function_pool(
-            before_update,
-            resource=resource,
-            user=user,
-            generic_service=self,
-            resource_name=resource_name,
-            _resource=_resource,
-            data=data
-        )
+        if before_update:
+            run_function_pool(
+                before_update,
+                resource=resource,
+                user=user,
+                generic_service=self,
+                resource_name=resource_name,
+                _resource=_resource,
+                data=data
+            )
 
         resource['_sys'].update({
             'modified_by': user['email'],
@@ -108,42 +116,45 @@ class ErtisGenericService(ErtisGenericRepository):
             collection=resource_name
         )
 
-        run_function_pool(
-            after_update,
-            resource=resource,
-            user=user,
-            generic_service=self,
-            resource_name=resource_name,
-            data=data,
-            _resource=_resource
-        )
+        if after_update:
+            run_function_pool(
+                after_update,
+                resource=resource,
+                user=user,
+                generic_service=self,
+                resource_name=resource_name,
+                data=data,
+                _resource=_resource
+            )
 
         return json.dumps(resource, default=bson_to_json)
 
     def delete(self, user, _id, resource_name, before_delete=None, after_delete=None):
         resource = self.find_one_by_id(_id, collection=resource_name)
 
-        run_function_pool(
-            before_delete,
-            resource=resource,
-            user=user,
-            resource_name=resource_name,
-            resource_id=_id,
-            generic_service=self,
-            _resource=resource
-        )
+        if before_delete:
+            run_function_pool(
+                before_delete,
+                resource=resource,
+                user=user,
+                resource_name=resource_name,
+                resource_id=_id,
+                generic_service=self,
+                _resource=resource
+            )
 
         self.remove_one_by_id(_id, collection=resource_name)
 
-        run_function_pool(
-            after_delete,
-            resource=resource,
-            user=user,
-            resource_name=resource_name,
-            resource_id=_id,
-            generic_service=self,
-            _resource=resource,
-        )
+        if after_delete:
+            run_function_pool(
+                after_delete,
+                resource=resource,
+                user=user,
+                resource_name=resource_name,
+                resource_id=_id,
+                generic_service=self,
+                _resource=resource,
+            )
 
     def filter(self, where, select, limit, sort, skip, resource_name):
         resources, count = self.query(where, select, limit, sort, skip, collection=resource_name)

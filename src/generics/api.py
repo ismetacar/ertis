@@ -68,9 +68,9 @@ class GenericErtisApi(object):
     }
 
     def __init__(self, app, settings, endpoint_prefix, methods, resource_name, resource_service,
-                 create_validation_schema=None, update_validation_schema=None, before_create=None,
-                 after_create=None, before_update=None, after_update=None, before_delete=None,
-                 after_delete=None):
+                 create_validation_schema=None, update_validation_schema=None, project_bounded=False,
+                 before_create=None, after_create=None, before_update=None, after_update=None,
+                 before_delete=None, after_delete=None):
         """
 
         if a generated instance is subjected to generate_endpoints() function, APIs are created for basic HTTP methods
@@ -86,8 +86,7 @@ class GenericErtisApi(object):
                 resource_service=example-service,
                 create_validation_schema=jsonschema_for_create,
                 update_validation_schema=jsonschema_for_update,
-                pipeline_functions=example_functions,
-                allow_to_anonymous=False/True
+                pipeline_functions=example_functions
             ).generate_endpoints()
 
         :param app: The currently running application.
@@ -109,6 +108,7 @@ class GenericErtisApi(object):
         self.resource_service = resource_service
         self.create_validation_schema = create_validation_schema
         self.update_validation_schema = update_validation_schema
+        self.project_bounded = project_bounded
         self.before_create = before_create
         self.after_create = after_create
         self.before_update = before_update
@@ -118,9 +118,17 @@ class GenericErtisApi(object):
         self.logger = logging.getLogger('resource.' + self.resource_name + '.logger')
 
     def generate_urls(self):
+
         delete_url = get_url = update_url = self.endpoint_prefix + '/<resource_id>'
         post_url = self.endpoint_prefix
         query_url = self.endpoint_prefix + '/_query'
+
+        if self.project_bounded:
+            delete_url = delete_url.format('<project_id>')
+            get_url = get_url.format('<project_id>')
+            update_url = update_url.format('<project_id>')
+            query_url = query_url.format('<project_id>')
+            post_url = post_url.format('<project_id>')
 
         return get_url, post_url, update_url, delete_url, query_url
 
