@@ -4,6 +4,7 @@ var = {
     "application_secret": "AtqVaL11EHVPEpbu2mr0yZgKXj1BnRj0",
     "token_ttl": 60,
     "default_database": "ertis",
-    "verify_token": "false"
+    "verify_token": "false",
+    "error_handler": "true"
 }
 

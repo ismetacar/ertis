@@ -18,3 +18,6 @@ def init_services(app, settings):
 
     from src.custom_api.change_password import init_api
     init_api(app, settings)
+
+    from src.custom_api.clients import init_api
+    init_api(app, settings)
