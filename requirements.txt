@@ -1,7 +1,6 @@
-slugify
-bson
 asn1crypto==0.24.0
 bcrypt==3.1.4
+bson==0.5.6
 cffi==1.11.5
 click==6.7
 cryptography==1.9
@@ -19,5 +18,8 @@ pycparser==2.18
 PyJWT==1.5.3
 pymongo==3.6.1
 python-dateutil==2.7.3
+python-slugify==1.2.6
 six==1.11.0
+slugify==0.0.1
+Unidecode==1.0.22
 Werkzeug==0.14.1
