@@ -59,5 +59,6 @@ class ErtisTokenService(ErtisGenericService):
 
         payload = {
             "prn": str(user["_id"]),
+            "client_id": user['client_id']
         }
         return generate_token(payload, secret, token_ttl)

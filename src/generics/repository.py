@@ -166,11 +166,9 @@ class ErtisGenericRepository(object):
 
         return founded
 
-    def find_one_by_id(self, _id, collection, raise_exec=True):
+    def find_one_by_id(self, where, collection, raise_exec=True):
         founded = self.find_one_by(
-            where={
-                "_id": maybe_object_id(_id)
-            },
+            where=where,
             raise_exec=raise_exec,
             collection=collection
         )

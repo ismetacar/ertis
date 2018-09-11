@@ -12,7 +12,7 @@ def ensure_email_is_unique(resource, generic_service, user):
     if user['email'] == email:
         return resource
 
-    users = generic_service.find_one_by(
+    _user = generic_service.find_one_by(
         where={
             'email': email
         },
@@ -20,7 +20,7 @@ def ensure_email_is_unique(resource, generic_service, user):
         raise_exec=False
     )
 
-    if users:
+    if _user and str(resource['_id']) != str(_user['_id']):
         raise ErtisError(
             err_code="errors.emailAddressIsUsedByAnotherUser",
             err_msg="The email address is being used by another user",

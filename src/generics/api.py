@@ -1,7 +1,9 @@
+import json
 import logging
 
 from flask import request, Response
 
+from src.generics.service import run_read_formatter
 from src.resources.security import ErtisSecurityManager
 from src.utils import query_helpers
 from src.utils.errors import ErtisError
@@ -67,10 +69,10 @@ class GenericErtisApi(object):
         'DISTINCT': 200
     }
 
-    def __init__(self, app, settings, endpoint_prefix, methods, resource_name, resource_service,
-                 create_validation_schema=None, update_validation_schema=None, project_bounded=False,
+    def __init__(self, app, settings, endpoint_prefix, methods, resource_name=None, resource_service=None,
+                 create_validation_schema=None, update_validation_schema=None,
                  before_create=None, after_create=None, before_update=None, after_update=None,
-                 before_delete=None, after_delete=None):
+                 before_delete=None, after_delete=None, read_formatter=None):
         """
 
         if a generated instance is subjected to generate_endpoints() function, APIs are created for basic HTTP methods
@@ -108,22 +110,22 @@ class GenericErtisApi(object):
         self.resource_service = resource_service
         self.create_validation_schema = create_validation_schema
         self.update_validation_schema = update_validation_schema
-        self.project_bounded = project_bounded
         self.before_create = before_create
         self.after_create = after_create
         self.before_update = before_update
         self.after_update = after_update
         self.before_delete = before_delete
         self.after_delete = after_delete
+        self.read_formatter = read_formatter
         self.logger = logging.getLogger('resource.' + self.resource_name + '.logger')
 
-    def generate_urls(self):
+    def generate_urls(self, *args, **kwargs):
 
         delete_url = get_url = update_url = self.endpoint_prefix + '/<resource_id>'
         post_url = self.endpoint_prefix
         query_url = self.endpoint_prefix + '/_query'
 
-        if self.project_bounded:
+        if kwargs.get('project_bounded'):
             delete_url = delete_url.format('<project_id>')
             get_url = get_url.format('<project_id>')
             update_url = update_url.format('<project_id>')
@@ -144,11 +146,19 @@ class GenericErtisApi(object):
             def query():
                 load_user(app.db, request, self.resource_name, self.settings)
                 where, select, limit, sort, skip = query_helpers.parse(request)
-                return Response(
-                    self.resource_service.filter(
+                response = json.loads(self.resource_service.filter(
                         app.generic_service, where, select,
                         limit, skip, sort, self.resource_name
-                    ),
+                    ))
+                _items = []
+                for item in response['items']:
+                    item = run_read_formatter(item, self.read_formatter)
+                    _items.append(item)
+
+                response['items'] = _items
+
+                return Response(
+                    json.dumps(response),
                     mimetype='application/json',
                     status=self.STATUS_CODE_MAPPING['QUERY']
                 )
@@ -158,12 +168,15 @@ class GenericErtisApi(object):
             @rename(self.resource_name + '_read')
             def read(resource_id):
                 load_user(app.db, request, self.resource_name, self.settings)
+                response = json.loads(self.resource_service.get(
+                    app.generic_service,
+                    _id=resource_id,
+                    resource_name=self.resource_name
+                ))
+                response = run_read_formatter(response, self.read_formatter)
+
                 return Response(
-                    self.resource_service.get(
-                        app.generic_service,
-                        _id=resource_id,
-                        resource_name=self.resource_name
-                    ),
+                    json.dumps(response),
                     mimetype='application/json',
                     status=self.STATUS_CODE_MAPPING['READ']
                 )
@@ -174,8 +187,7 @@ class GenericErtisApi(object):
             def create():
                 user = load_user(app.db, request, self.resource_name, self.settings)
                 data = request.data
-                return Response(
-                    self.resource_service.post(
+                response = json.loads(self.resource_service.post(
                         app.generic_service,
                         user,
                         data,
@@ -183,7 +195,11 @@ class GenericErtisApi(object):
                         validate_by=self.create_validation_schema,
                         before_create=self.before_create,
                         after_create=self.after_create
-                    ),
+                    ))
+
+                response = run_read_formatter(response, self.read_formatter)
+                return Response(
+                    json.dumps(response),
                     status=self.STATUS_CODE_MAPPING['CREATE'],
                     mimetype='application/json'
                 )
@@ -194,8 +210,7 @@ class GenericErtisApi(object):
             def update(resource_id):
                 user = load_user(app.db, request, self.resource_name, self.settings)
                 data = request.data
-                return Response(
-                    self.resource_service.put(
+                response = json.loads(self.resource_service.put(
                         app.generic_service,
                         user,
                         resource_id,
@@ -204,7 +219,11 @@ class GenericErtisApi(object):
                         validate_by=self.update_validation_schema,
                         before_update=self.before_update,
                         after_update=self.after_update
-                    ),
+                    ))
+
+                response = run_read_formatter(response, self.read_formatter)
+                return Response(
+                    json.dumps(response),
                     mimetype='application/json',
                     status=self.STATUS_CODE_MAPPING['UPDATE']
                 )
@@ -220,6 +239,129 @@ class GenericErtisApi(object):
                         user,
                         resource_id,
                         resource_name=self.resource_name,
+                        before_delete=self.before_delete,
+                        after_delete=self.after_delete
+                    ),
+                    status=self.STATUS_CODE_MAPPING['DELETE']
+                )
+
+
+class ProjectBoundedErtisGenericApi(GenericErtisApi):
+    def __init__(self, app, settings, endpoint_prefix, methods, resource_name=None, resource_service=None,
+                 create_validation_schema=None, update_validation_schema=None,
+                 before_create=None, after_create=None, before_update=None, after_update=None,
+                 before_delete=None, after_delete=None):
+
+        super().__init__(app, settings, endpoint_prefix, methods, resource_name=resource_name,
+                         resource_service=resource_service, create_validation_schema=create_validation_schema,
+                         update_validation_schema=update_validation_schema,
+                         before_create=before_create, after_create=after_create, before_update=before_update,
+                         after_update=after_update, before_delete=before_delete, after_delete=after_delete)
+
+    def generate_endpoints(self):
+        app = self.current_app
+
+        get_url, post_url, update_url, delete_url, query_url = self.generate_urls(project_bounded=True)
+
+        if 'QUERY' in self.methods:
+            @app.route(query_url, methods=['POST'])
+            @rename(self.resource_name + '_query')
+            def query(project_id):
+                load_user(app.db, request, self.resource_name, self.settings)
+                where, select, limit, sort, skip = query_helpers.parse(request)
+                response = json.loads(self.resource_service.filter(
+                        app.generic_service, where, select,
+                        limit, skip, sort, self.resource_name, project_id
+                    ))
+
+                response = run_read_formatter(response, self.read_formatter)
+
+                return Response(
+                    json.dumps(response),
+                    mimetype='application/json',
+                    status=self.STATUS_CODE_MAPPING['QUERY']
+                )
+
+        if 'GET' in self.methods:
+            @app.route(get_url, methods=['GET'])
+            @rename(self.resource_name + '_read')
+            def read(project_id, resource_id):
+                load_user(app.db, request, self.resource_name, self.settings)
+                response = json.loads(self.resource_service.get(
+                        app.generic_service,
+                        _id=resource_id,
+                        resource_name=self.resource_name,
+                        project_id=project_id
+                    ))
+
+                response = run_read_formatter(response, self.read_formatter)
+                return Response(
+                    json.dumps(response),
+                    mimetype='application/json',
+                    status=self.STATUS_CODE_MAPPING['READ']
+                )
+
+        if 'POST' in self.methods:
+            @app.route(post_url, methods=['POST'])
+            @rename(self.resource_name + '_create')
+            def create(project_id):
+                user = load_user(app.db, request, self.resource_name, self.settings)
+                data = request.data
+                response = json.loads(self.resource_service.post(
+                        app.generic_service,
+                        user,
+                        data,
+                        resource_name=self.resource_name,
+                        project_id=project_id,
+                        validate_by=self.create_validation_schema,
+                        before_create=self.before_create,
+                        after_create=self.after_create
+                    ))
+
+                response = run_read_formatter(response, self.read_formatter)
+                return Response(
+                    json.dumps(response),
+                    status=self.STATUS_CODE_MAPPING['CREATE'],
+                    mimetype='application/json'
+                )
+
+        if 'PUT' in self.methods:
+            @app.route(update_url, methods=['PUT'])
+            @rename(self.resource_name + '_update')
+            def update(project_id, resource_id):
+                user = load_user(app.db, request, self.resource_name, self.settings)
+                data = request.data
+                response = json.loads(self.resource_service.put(
+                        app.generic_service,
+                        user,
+                        data,
+                        _id=resource_id,
+                        project_id=project_id,
+                        resource_name=self.resource_name,
+                        validate_by=self.update_validation_schema,
+                        before_update=self.before_update,
+                        after_update=self.after_update
+                    ))
+
+                response = run_read_formatter(response, self.read_formatter)
+                return Response(
+                    json.dumps(response),
+                    mimetype='application/json',
+                    status=self.STATUS_CODE_MAPPING['UPDATE']
+                )
+
+        if 'DELETE' in self.methods:
+            @app.route(delete_url, methods=['DELETE'])
+            @rename(self.resource_name + '_delete')
+            def delete(project_id, resource_id):
+                user = load_user(app.db, request, self.resource_name, self.settings)
+                return Response(
+                    self.resource_service.delete(
+                        app.generic_service,
+                        user,
+                        resource_id,
+                        resource_name=self.resource_name,
+                        project_id=project_id,
                         before_delete=self.before_delete,
                         after_delete=self.after_delete
                     ),

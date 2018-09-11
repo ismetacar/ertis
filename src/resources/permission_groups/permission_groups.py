@@ -38,3 +38,6 @@ def check_slug_conflict(resource, generic_service):
             err_msg="Permission group already exists with given slug: <{}>".format(slug),
             status_code=400
         )
+
+    return resource
+

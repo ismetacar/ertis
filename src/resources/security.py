@@ -30,7 +30,10 @@ class ErtisSecurityManager(ErtisGenericService):
                 }
             )
 
-        user = self.find_one_by_id(decoded['prn'], 'users')
+        where = {
+            '_id': decoded['prn']
+        }
+        user = self.find_one_by_id(where, 'users')
 
         return user
 
