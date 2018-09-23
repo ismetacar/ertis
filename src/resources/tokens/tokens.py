@@ -35,8 +35,16 @@ class ErtisTokenService(ErtisGenericService):
             where={
                 'email': credentials['email']
             },
-            collection='users'
+            collection='users',
+            raise_exec=False
         )
+
+        if not user:
+            raise ErtisError(
+                err_code="errors.UserNotFound",
+                err_msg="User not found",
+                status_code=401
+            )
 
         if not bcrypt.verify(credentials["password"], user["password"]):
             raise ErtisError(

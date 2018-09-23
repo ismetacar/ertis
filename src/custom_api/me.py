@@ -40,6 +40,7 @@ def init_api(app, settings):
 
         security_manager = ErtisSecurityManager(app.db)
         user = security_manager.load_user(token, settings['application_secret'], settings['verify_token'])
+        user.pop('password', None)
 
         return Response(
             json.dumps(user, default=bson_to_json),
