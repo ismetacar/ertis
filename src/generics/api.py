@@ -148,7 +148,7 @@ class GenericErtisApi(object):
                 where, select, limit, sort, skip = query_helpers.parse(request)
                 response = json.loads(self.resource_service.filter(
                         app.generic_service, where, select,
-                        limit, skip, sort, self.resource_name
+                        limit, sort, skip, self.resource_name
                     ))
                 _items = []
                 for item in response['items']:
@@ -271,7 +271,7 @@ class ProjectBoundedErtisGenericApi(GenericErtisApi):
                 where, select, limit, sort, skip = query_helpers.parse(request)
                 response = json.loads(self.resource_service.filter(
                         app.generic_service, where, select,
-                        limit, skip, sort, self.resource_name, project_id
+                        limit, sort, skip, self.resource_name, project_id
                     ))
 
                 response = run_read_formatter(response, self.read_formatter)
