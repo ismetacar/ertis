@@ -12,23 +12,24 @@ from src.utils.json_helpers import object_hook, bson_to_json
 
 class ErtisGenericService(ErtisGenericRepository):
 
-    def get(self, _id, resource_name, project_id=None):
-        where = {'_id': _id}
+    def get(self, **kwargs):
+        _id = kwargs.get('_id')
+        resource_name = kwargs.get('resource_name')
 
-        if project_id:
-            where.update({'project_id': project_id})
+        where = {'_id': _id}
 
         resource = self.find_one_by_id(where, resource_name)
         return json.dumps(resource, default=bson_to_json)
 
-    def post(self, user, data, resource_name, project_id=None, validate_by=None, before_create=None, after_create=None):
-        resource = object_hook(json.loads(data))
-        resource.update({
-            'client_id': user['client_id']
-        })
+    def post(self, **kwargs):
+        user = kwargs.get('user', None)
+        data = kwargs.get('data', None)
+        resource_name = kwargs.get('resource_name')
+        validate_by = kwargs.get('validate_by')
+        before_create = kwargs.get('before_create')
+        after_create = kwargs.get('after_create')
 
-        if project_id:
-            resource.update({'project_id': project_id})
+        resource = object_hook(json.loads(data))
 
         if validate_by:
             try:
@@ -55,11 +56,13 @@ class ErtisGenericService(ErtisGenericRepository):
                 data=data
             )
 
-        resource['_sys'] = {
-            'created_by': user['email'],
-            'created_at': datetime.datetime.utcnow(),
-            'collection': resource_name
-        }
+        if user:
+            resource['_sys'] = {
+                'created_by': user['email'],
+                'created_at': datetime.datetime.utcnow(),
+                'collection': resource_name
+            }
+
         resource = self.save(resource, resource_name)
 
         if after_create:
@@ -75,20 +78,19 @@ class ErtisGenericService(ErtisGenericRepository):
 
         return json.dumps(resource, default=bson_to_json)
 
-    def put(self, user, _id, data, resource_name, validate_by=None, before_update=None,
-            after_update=None, project_id=None):
+    def put(self, **kwargs):
+        user = kwargs.get('user', None)
+        _id = kwargs.get('resource_id')
+        data = kwargs.get('data')
+        resource_name = kwargs.get('resource_name')
+        validate_by = kwargs.get('validate_by', None)
+        before_update = kwargs.get('before_update', None)
+        after_update = kwargs.get('after_update', None)
 
         try:
             data = object_hook(json.loads(data))
         except Exception as e:
             pprint(str(e))
-
-        data.update({
-            'client_id': user['client_id'],
-        })
-
-        if project_id:
-            data.update({'project_id': project_id})
 
         if validate_by:
             try:
@@ -108,9 +110,6 @@ class ErtisGenericService(ErtisGenericRepository):
             '_id': _id
         }
 
-        if project_id:
-            data.update({'project_id': project_id})
-
         resource = json.loads(json.dumps(self.find_one_by_id(where, resource_name), default=bson_to_json))
 
         _resource = copy.deepcopy(resource)
@@ -128,17 +127,17 @@ class ErtisGenericService(ErtisGenericRepository):
                 before_update,
                 resource=resource,
                 user=user,
-                project_id=project_id,
                 generic_service=self,
                 resource_name=resource_name,
                 _resource=_resource,
                 data=data
             )
 
-        resource['_sys'].update({
-            'modified_by': user['email'],
-            'modified_at': datetime.datetime.utcnow()
-        })
+        if user:
+            resource['_sys'].update({
+                'modified_by': user['email'],
+                'modified_at': datetime.datetime.utcnow()
+            })
 
         self.replace(
             resource,
@@ -150,7 +149,6 @@ class ErtisGenericService(ErtisGenericRepository):
                 after_update,
                 resource=resource,
                 user=user,
-                project_id=project_id,
                 generic_service=self,
                 resource_name=resource_name,
                 data=data,
@@ -159,10 +157,14 @@ class ErtisGenericService(ErtisGenericRepository):
 
         return json.dumps(resource, default=bson_to_json)
 
-    def delete(self, user, _id, resource_name, project_id=None, before_delete=None, after_delete=None):
+    def delete(self, **kwargs):
+        user = kwargs.get('user', None)
+        _id = kwargs.get('_id', None)
+        resource_name = kwargs.get('resource_name')
+        before_delete = kwargs.get('before_delete')
+        after_delete = kwargs.get('after_delete')
+
         where = {'_id': _id}
-        if project_id:
-            where.update({'project_id': project_id})
 
         resource = self.find_one_by_id(where, collection=resource_name)
 
@@ -190,14 +192,16 @@ class ErtisGenericService(ErtisGenericRepository):
                 _resource=resource,
             )
 
-    def filter(self, where, select, limit, sort, skip, resource_name, project_id=None):
+    def filter(self, **kwargs):
+        where = kwargs.get('where', {})
+        select = kwargs.get('select', {})
+        limit = kwargs.get('limit', 500)
+        sort = kwargs.get('sort', None)
+        skip = kwargs.get('skip', 0)
+        resource_name = kwargs.get('resource_name')
+
         if not where:
             where = {}
-
-        if project_id:
-            where.update({
-                'project_id': project_id
-            })
 
         resources, count = self.query(where, select, limit, sort, skip, collection=resource_name)
 

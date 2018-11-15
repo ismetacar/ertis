@@ -46,15 +46,7 @@ class ErtisSecurityManager(ErtisGenericService):
             },
             collection='permission_groups'
         )
+
         user['permissions'] = permission['permissions']
-
-        client = self.find_one_by(
-            where={
-                '_id': user['client_id']
-            },
-            collection='clients'
-        )
-
-        user['client'] = client
 
         return user

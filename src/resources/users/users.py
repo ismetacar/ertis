@@ -9,12 +9,12 @@ def ensure_email_is_unique(resource, generic_service, user):
     if not email:
         return resource
 
-    if user['email'] == email:
-        return resource
-
     _user = generic_service.find_one_by(
         where={
-            'email': email
+            'email': email,
+            '_id': {
+                '$ne': resource.get('_id', None)
+            }
         },
         collection='users',
         raise_exec=False

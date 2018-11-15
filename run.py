@@ -5,6 +5,7 @@ import traceback
 from flask import Response
 
 from src import create_app
+from src.resources.security import ErtisSecurityManager
 from src.utils.errors import ErtisError
 from src.utils.json_helpers import bson_to_json, parse_boolean
 
@@ -19,6 +20,7 @@ def config_settings():
 
 settings = config_settings()
 app = create_app(settings)
+app.security_manager = ErtisSecurityManager(app.db)
 
 if settings.get('error_handler', False):
 
@@ -45,7 +47,6 @@ if settings.get('error_handler', False):
             json.dumps(response, default=bson_to_json), status_code,
             mimetype='application/json'
         )
-
 
 if __name__ == '__main__':
     app.run(debug=True)
