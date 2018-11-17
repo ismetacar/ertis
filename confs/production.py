@@ -9,5 +9,10 @@ production_config = {
     "debug": False,
     "port": 8888,
     "sentry": False,
-    "sentry_connection_string": ""
+    "sentry_connection_string": "",
+    "email": False,
+    "mail_server": "",
+    "mail_port": 465,
+    "mail_username": "",
+    "mail_password": ""
 }
