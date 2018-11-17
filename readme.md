@@ -28,7 +28,7 @@ def register_api(app, settings):
 - `allow_anonymous`: You can set True or False for the api endpoint authorization requirement (Must be boolean)
 
 
-Than setup the registered api like below on same rest.py file.
+Then setup the registered api like below on same rest.py file.
 
 ```python
 def setup_api(app):
