@@ -3,7 +3,7 @@ Register a rest API for 5 minutes.
 
 ### Generic API Register and setup
 
-Open the `src/rest.py` and register your api inside of `register_api()` function like below:
+Open the `src/rest.py` and register your api inside of `register_api()` function like as below:
 
 ```python
 def register_api(app, settings):
@@ -24,11 +24,11 @@ def register_api(app, settings):
 - `endpoint_prefix`: Endpoint Prefix for registered api endpoint (string must be unique and startswith '/')
 - `methods`: Define the allowed methods for registered api endpoint (Must be a string array and items must be HTTP methods)
 - `resource_name`: This parameter must be unique. Used for resource name. (For mongodb collection name etc.)
-- `ressource_service`: Write your resource service. You can use the default generic service ErtisGenericService If you don't have any service
+- `resource_service`: Write your resource service. You can use the default generic service ErtisGenericService If you don't have any service
 - `allow_anonymous`: You can set True or False for the api endpoint authorization requirement (Must be boolean)
 
 
-Then setup the registered api like below on same rest.py file.
+Then setup the registered api like as below on same `rest.py file.
 
 ```python
 def setup_api(app):
@@ -72,7 +72,7 @@ If `DELETE` method not allowed for registered api endpoint you don't have to def
 
 ### Custom API Register and setup
 
-Open the `src/custom_api` folder and create your api file line `users.py`. And create your api like below:
+Open the `src/custom_api` folder and create your api file `users.py`. And create your api like as below:
 
 ```python
 def init_api(app, settings):
