@@ -8,6 +8,11 @@ local_config = {
     "error_handler": True,
     "debug": True,
     "port": 8888,
-    "sentry": False,
-    "sentry_connection_string": "https://2a589cc99f0c43678dfa69386a52a397@sentry.io/1325189"
+    "sentry": True,
+    "sentry_connection_string": "https://2a589cc99f0c43678dfa69386a52a397@sentry.io/1325189",
+    "email": True,
+    "mail_server": "smtp.googlemail.com",
+    "mail_port": 465,
+    "mail_username": "ertis.f5@gmail.com",
+    "mail_password": "****"
 }
