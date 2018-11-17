@@ -7,5 +7,7 @@ local_config = {
     "verify_token": False,
     "error_handler": True,
     "debug": True,
-    "port": 8888
+    "port": 8888,
+    "sentry": False,
+    "sentry_connection_string": "https://2a589cc99f0c43678dfa69386a52a397@sentry.io/1325189"
 }

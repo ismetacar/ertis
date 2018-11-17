@@ -7,5 +7,7 @@ development_config = {
     "verify_token": False,
     "error_handler": True,
     "debug": True,
-    "port": 8888
+    "port": 8888,
+    "sentry": False,
+    "sentry_connection_string": ""
 }
