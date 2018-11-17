@@ -100,7 +100,7 @@ run your code.
 
 # Ertis Rest API Client Usage
 
-This api will use for warehouse management system. Python language and flask framework was used to write Ertis Generic API. MongoDB the NoSQL database has been chosen. 
+Build your api quickly. Python language and flask framework was used to write Ertis Generic API. MongoDB the NoSQL database has been chosen. 
 
 Author: ismetacar
 
