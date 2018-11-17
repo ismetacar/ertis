@@ -1,10 +1,12 @@
 from flask import Flask
 from pymongo import MongoClient
+import sentry_sdk
 
 
 def create_app(settings):
     app = Flask(__name__)
 
+    sentry_sdk.init(settings['sentry_connection_string'])
     app.db = MongoClient(settings['mongo_connection_string']).get_database(settings['default_database'])
     app.public_endpoints = ['healtcheck', 'create_token', 'site_map']
 
