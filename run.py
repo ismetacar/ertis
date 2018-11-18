@@ -30,7 +30,7 @@ app.security_manager = ErtisSecurityManager(app.db)
 app.debug = settings['debug']
 app.secret_key = settings['application_secret']
 app.port = settings['port']
-
+app.env = settings['environment']
 
 if __name__ == '__main__':
     app.run(port=app.port)

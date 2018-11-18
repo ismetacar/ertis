@@ -10,16 +10,16 @@ def create_app(settings):
     app.db = MongoClient(settings['mongo_connection_string']).get_database(settings['default_database'])
     app.public_endpoints = ['healtcheck', 'create_token', 'site_map']
 
-    if settings['sentry']:
-        sentry_sdk.init(settings['sentry_connection_string'])
+    if settings['sentry']['active']:
+        sentry_sdk.init(settings['sentry']['connection_string'])
 
-    if settings['email']:
-        app.config['MAIL_SERVER'] = settings['mail_server']
-        app.config['MAIL_PORT'] = settings['mail_port']
-        app.config['MAIL_USE_TLS'] = False
-        app.config['MAIL_USE_SSL'] = True
-        app.config['MAIL_USERNAME'] = settings['mail_username']
-        app.config['MAIL_PASSWORD'] = settings['mail_password']
+    if settings['email']['active']:
+        app.config['MAIL_SERVER'] = settings['email']['mail_server']
+        app.config['MAIL_PORT'] = settings['email']['mail_port']
+        app.config['MAIL_USE_TLS'] = settings['email']['mail_use_tls']
+        app.config['MAIL_USE_SSL'] = settings['email']['mail_use_ssl']
+        app.config['MAIL_USERNAME'] = settings['email']['mail_username']
+        app.config['MAIL_PASSWORD'] = settings['email']['mail_password']
 
         mail = Mail(app)
         app.mail = mail

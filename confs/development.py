@@ -1,4 +1,5 @@
 development_config = {
+    "environment": "development",
     "mongo_connection_string": "mongodb://localhost:27017/ertis",
     "api_version": "v1",
     "application_secret": "AtqVaL11EHVPEpbu2mr0yZgKXj1BnRj0",
@@ -8,11 +9,17 @@ development_config = {
     "error_handler": True,
     "debug": True,
     "port": 8888,
-    "sentry": False,
-    "sentry_connection_string": "",
-    "email": False,
-    "mail_server": "",
-    "mail_port": 465,
-    "mail_username": "",
-    "mail_password": ""
+    "sentry": {
+        "active": False,
+        "connection_string": ""
+    },
+    "email": {
+        "active": False,
+        "mail_server": "",
+        "mail_port": 465,
+        "mail_username": "",
+        "mail_password": "",
+        "mail_use_tls": False,
+        "mail_use_ssl": True
+    }
 }
