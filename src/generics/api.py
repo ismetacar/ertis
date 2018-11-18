@@ -5,6 +5,7 @@ from flask import request, Response
 
 from src.generics.service import run_read_formatter
 from src.utils import query_helpers
+from src.utils.gzip import gzipped
 
 
 def rename(new_name):
@@ -95,6 +96,7 @@ class GenericErtisApi(object):
         if 'QUERY' in self.methods:
             @app.route(query_url, methods=['POST'], endpoint=self.resource_name + '_query')
             @rename(self.resource_name + '_query')
+            @gzipped
             def query():
 
                 where, select, limit, sort, skip = query_helpers.parse(request)
@@ -121,6 +123,7 @@ class GenericErtisApi(object):
         if 'GET' in self.methods:
             @app.route(get_url, methods=['GET'], endpoint=self.resource_name + '_read')
             @rename(self.resource_name + '_read')
+            @gzipped
             def read(resource_id):
                 user = getattr(request, 'user', None)
 
@@ -142,6 +145,7 @@ class GenericErtisApi(object):
         if 'POST' in self.methods:
             @app.route(post_url, methods=['POST'], endpoint=self.resource_name + '_create')
             @rename(self.resource_name + '_create')
+            @gzipped
             def create():
                 user = getattr(request, 'user', None)
                 data = request.data
@@ -166,6 +170,7 @@ class GenericErtisApi(object):
         if 'PUT' in self.methods:
             @app.route(update_url, methods=['PUT'], endpoint=self.resource_name + '_update')
             @rename(self.resource_name + '_update')
+            @gzipped
             def update(resource_id):
 
                 user = getattr(request, 'user', None)
@@ -191,6 +196,7 @@ class GenericErtisApi(object):
         if 'DELETE' in self.methods:
             @app.route(delete_url, methods=['DELETE'], endpoint=self.resource_name + '_delete')
             @rename(self.resource_name + '_delete')
+            @gzipped
             def delete(resource_id):
 
                 user = getattr(request, 'user', None)
