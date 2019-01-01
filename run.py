@@ -14,7 +14,7 @@ CONFIG_LOOKUP = {
 
 parser = optparse.OptionParser()
 
-parser.add_option("--config", default="local")
+parser.add_option("--config", default="production")
 
 
 def config_settings():
