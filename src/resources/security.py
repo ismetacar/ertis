@@ -1,5 +1,4 @@
 import jwt
-from jwt import ExpiredSignatureError
 
 from src.generics.service import ErtisGenericService
 from src.utils.errors import ErtisError
@@ -11,7 +10,7 @@ class ErtisSecurityManager(ErtisGenericService):
         try:
             decoded = jwt.decode(token, key=secret, algorithms='HS256', verify=verify)
 
-        except ExpiredSignatureError as e:
+        except jwt.ExpiredSignatureError as e:
             raise ErtisError(
                 status_code=401,
                 err_msg="Provided token has expired",
