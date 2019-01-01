@@ -3,7 +3,6 @@ import json
 
 import jwt
 from bson import ObjectId
-from jwt import ExpiredSignatureError
 
 from src.utils.errors import ErtisError
 from src.generics.service import ErtisGenericService
