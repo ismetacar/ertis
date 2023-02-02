@@ -48,5 +48,5 @@ traitlets==4.3.2
 tzlocal==1.5.1
 Unidecode==1.0.22
 urllib3==1.26.5
-Werkzeug==0.15.3
+Werkzeug==0.15.5
 WTForms==2.2.1
